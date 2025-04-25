@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Главная</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="sidebar">
+    <a href="index.html">Меню</a>
+
+    <div class="dropdown">
+      <a href="tables.html" class="dropdown-toggle">Таблицы</a>
+      <div class="dropdown-content">
+        <a href="tables.html?league=england">Англия</a>
+        <a href="tables.html?league=spain">Испания</a>
+        <a href="tables.html?league=germany">Германия</a>
+      </div>
+    </div>
+
+    <div class="dropdown">
+      <a href="stats.html" class="dropdown-toggle">Статистика</a>
+      <div class="dropdown-content">
+        <a href="stats.html?league=england-stats">Англия</a>
+        <a href="stats.html?league=spain-stats">Испания</a>
+        <a href="stats.html?league=germany-stats">Германия</a>
+      </div>
+    </div>
+
+    <a href="about.html">Об авторе</a>
+  </div>
+
+  <div class="content">
+    <h1>Футбольная статистика</h1>
+    <p>На данном сайте можно найти турнирные таблицы и индивидуальные показатели игроков по некоторым европейским лигам.</p>
+    <p>Выберите интересующий раздел в меню <b>слева</b>, чтобы начать, или попытайте удачу, нажав кнопку снизу:</p>
+    <a id="random-link" class="link-button" href="#">Случайная таблица</a>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
