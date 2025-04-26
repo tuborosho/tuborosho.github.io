@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       });
 
-		rows.sort(function (a, b) {
+      rows.sort(function (a, b) {
         function getStats(row) {
           const cells = row.querySelectorAll("td");
           return {
@@ -221,6 +221,45 @@ document.addEventListener("DOMContentLoaded", function () {
     table.classList.remove("editing");
 
     recalculateTableData();
+
+    const sectionId = table.closest("section").id;
+    const tableData = Array.from(rows).map(function (row) {
+      return Array.from(row.querySelectorAll("td")).map(function (cell) {
+        return cell.textContent;
+      });
+    });
+
+    localStorage.setItem("tableData-" + sectionId, JSON.stringify(tableData));
+  };
+
+  tables.forEach(function (table) {
+    const sectionId = table.closest("section").id;
+    const savedData = localStorage.getItem("tableData-" + sectionId);
+    if (savedData) {
+      const tableData = JSON.parse(savedData);
+      const rows = table.querySelectorAll("tbody tr");
+
+      tableData.forEach(function (data, index) {
+        const row = rows[index];
+        const cells = row.querySelectorAll("td");
+
+        data.forEach(function (cellData, i) {
+          cells[i].textContent = cellData;
+        });
+      });
+
+      recalculateTableData();
+    }
+  });
+
+  window.clearSavedTableData = function (button) {
+    if (confirm("Вы уверены, что хотите очистить сохранённые изменения?")) {
+      const section = button.closest("section");
+      const sectionId = section.id;
+
+      localStorage.removeItem("tableData-" + sectionId);
+
+      location.reload();
+    }
   };
 });
-
