@@ -8,7 +8,6 @@ body {
 
 .sidebar {
   width: 10em;
-  color: white;
   background-color: #222;
   height: 100%;
   position: fixed;
@@ -139,4 +138,9 @@ button:hover, .link-button:hover {
 
 .hidden {
   display: none;
+}
+
+.editing td:hover, .editing td:focus{
+	background-color: #007bff11;
+	border: 2px solid #ccc;
 }
