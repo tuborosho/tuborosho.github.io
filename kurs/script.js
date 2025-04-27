@@ -191,6 +191,11 @@ document.addEventListener("DOMContentLoaded", function () {
     randomLink.href = random;
   }
 
+
+	function isNonNegativeInteger(value) {
+    return /^\d+$/.test(value) && parseInt(value, 10) >= 0;
+  }
+
   window.enableEditing = function (button) {
     const table = button.closest("section").querySelector("table");
     const rows = table.querySelectorAll("tbody tr");
@@ -209,6 +214,25 @@ document.addEventListener("DOMContentLoaded", function () {
   window.saveTableData = function (button) {
     const table = button.closest("section").querySelector("table");
     const rows = table.querySelectorAll("tbody tr");
+    let isValid = true;
+
+    rows.forEach(function (row) {
+      const cells = row.querySelectorAll("td");
+      const wins = cells[3].textContent.trim();
+      const draws = cells[4].textContent.trim();
+      const losses = cells[5].textContent.trim();
+      const goalsFor = cells[6].textContent.trim();
+      const goalsAgainst = cells[7].textContent.trim();
+
+      if (![wins, draws, losses, goalsFor, goalsAgainst].every(isNonNegativeInteger)) {
+        alert("Значения числовых показателей должны быть неотрицательными.");
+        isValid = false;
+      }
+    });
+
+    if (!isValid) {
+      return; 
+    }
 
     rows.forEach(function (row) {
       const cells = row.querySelectorAll("td");
@@ -262,4 +286,54 @@ document.addEventListener("DOMContentLoaded", function () {
       location.reload();
     }
   };
+  
+  window.downloadLeagueTable = function (button) {
+  const section = button.closest('section');
+  const table = section.querySelector('table');
+
+  if (!table) {
+    console.error('тшггле');
+    return;
+  }
+
+  const rows = table.querySelectorAll('tr');
+  const csvContent = [];
+  
+  const headers = Array.from(rows[0].querySelectorAll('th'))
+    .map(function (header) {
+      return header.innerText.trim();
+    });
+  csvContent.push(headers.join(';'));
+
+  rows.forEach(function (row, index) {
+    if (index === 0) return;
+
+    const cols = Array.from(row.querySelectorAll('td'));
+    const rowData = cols.map(function (col) {
+      return col.innerText.trim().replace(/"/g, '""');
+    });
+
+    csvContent.push(rowData.join(';'));
+  });
+
+  const csvString = csvContent.join('\n');
+  downloadCSV("\uFEFF" + csvString, section.id + '.csv');
+};
+
+function downloadCSV(csv, filename) {
+  const csvFile = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const downloadLink = document.createElement("a");
+
+  downloadLink.download = filename;
+  downloadLink.href = window.URL.createObjectURL(csvFile);
+  downloadLink.style.display = "none";
+
+  document.body.appendChild(downloadLink);
+  downloadLink.click();
+  document.body.removeChild(downloadLink);
+}
+
+
 });
+
+
