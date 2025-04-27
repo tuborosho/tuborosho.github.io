@@ -1,5 +1,4 @@
-document.addEventListener("DOMContentLoaded", function () {
-  const tables = document.querySelectorAll(".sortable");
+const tables = document.querySelectorAll(".sortable");
 
   function recalculateTableData() {
     tables.forEach(function (table) {
@@ -334,6 +333,5 @@ function downloadCSV(csv, filename) {
 }
 
 
-});
 
 
