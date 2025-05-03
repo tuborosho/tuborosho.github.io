@@ -143,5 +143,4 @@ button:hover, .link-button:hover {
 .editing td:hover, .editing td:focus{
 	background-color: #007bff11;
 	border: 2px solid #ccc;
-	line-height: 0.3; 
 }
