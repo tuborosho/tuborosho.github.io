@@ -1,4 +1,5 @@
-const tables = document.querySelectorAll(".sortable");
+document.addEventListener("DOMContentLoaded", function () {
+  const tables = document.querySelectorAll(".sortable");
 
   function recalculateTableData() {
     tables.forEach(function (table) {
@@ -210,6 +211,8 @@ const tables = document.querySelectorAll(".sortable");
     table.classList.add("editing");
   };
 
+
+
   window.saveTableData = function (button) {
     const table = button.closest("section").querySelector("table");
     const rows = table.querySelectorAll("tbody tr");
@@ -256,24 +259,31 @@ const tables = document.querySelectorAll(".sortable");
   };
 
   tables.forEach(function (table) {
-    const sectionId = table.closest("section").id;
-    const savedData = localStorage.getItem("tableData-" + sectionId);
-    if (savedData) {
-      const tableData = JSON.parse(savedData);
-      const rows = table.querySelectorAll("tbody tr");
+  const sectionId = table.closest("section").id;
+  const savedData = localStorage.getItem("tableData-" + sectionId);
 
-      tableData.forEach(function (data, index) {
-        const row = rows[index];
-        const cells = row.querySelectorAll("td");
+  if (savedData) {
+    const tableData = JSON.parse(savedData);
+    const tbody = table.querySelector("tbody");
+    tbody.innerHTML = "";
 
-        data.forEach(function (cellData, i) {
-          cells[i].textContent = cellData;
-        });
+    tableData.forEach(function (data) {
+      const row = document.createElement("tr");
+
+      data.forEach(function (cellData, i) {
+        const cell = document.createElement("td");
+        cell.textContent = cellData;
+
+        row.appendChild(cell);
       });
 
-      recalculateTableData();
-    }
-  });
+      tbody.appendChild(row);
+    });
+
+
+    recalculateTableData();
+  }
+});
 
   window.clearSavedTableData = function (button) {
     if (confirm("Вы уверены, что хотите очистить сохранённые изменения?")) {
@@ -332,6 +342,31 @@ function downloadCSV(csv, filename) {
   document.body.removeChild(downloadLink);
 }
 
+window.addTableRow = function (button) {
+  const table = button.closest("section").querySelector("table");
+  const tbody = table.querySelector("tbody");
 
+  const row = document.createElement("tr");
+
+  for (let i = 0; i < 10; i++) {
+    const cell = document.createElement("td");
+
+    if (i === 0) {
+      cell.textContent = "";
+    } else if (i === 2 || i === 8 || i === 9) {
+      cell.textContent = "";
+    } else {
+      cell.contentEditable = true;
+      cell.textContent = "";
+    }
+
+    row.appendChild(cell);
+  }
+
+  tbody.appendChild(row);
+
+  table.classList.add("editing");
+};
+});
 
 
