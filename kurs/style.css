@@ -143,5 +143,9 @@ button:hover, .link-button:hover {
 .editing td:hover, .editing td:focus{
 	background-color: #007bff11;
 	border: 2px solid #ccc;
-	height: 1em;
+	height: 1em; 
+}
+
+.delete-button {
+  display: inline-block;
 }
