@@ -147,5 +147,13 @@ button:hover, .link-button:hover {
 }
 
 .delete-button {
-  display: inline-block;
+  background-color: #ff000055;
+  position: absolute;
+  display: inline;
+  padding: 0px 10px;
+  margin-top: -10px;
+}
+
+.delete-button:hover {
+  background-color: #ff0000dd;
 }
