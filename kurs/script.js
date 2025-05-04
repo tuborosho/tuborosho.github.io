@@ -197,66 +197,87 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   window.enableEditing = function (button) {
-    const table = button.closest("section").querySelector("table");
-    const rows = table.querySelectorAll("tbody tr");
+  const table = button.closest("section").querySelector("table");
+  const rows = table.querySelectorAll("tbody tr");
 
-    rows.forEach(function (row) {
-      const cells = row.querySelectorAll("td");
-      cells[1].contentEditable = true;
-      for (let i = 3; i <= 7; i++) {
-        cells[i].contentEditable = true;
-      }
-    });
+  rows.forEach(function (row) {
+    const cells = row.querySelectorAll("td");
 
-    table.classList.add("editing");
-  };
+    cells[1].contentEditable = true;
+    for (let i = 3; i <= 7; i++) {
+      cells[i].contentEditable = true;
+    }
+
+    const lastCell = cells[cells.length - 1];
+
+    if (!lastCell.querySelector(".delete-button")) {
+      const deleteButton = document.createElement("button");
+      deleteButton.textContent = "X";
+      deleteButton.className = "delete-button";
+
+      deleteButton.addEventListener("click", function () {
+        if (confirm("Вы уверены, что хотите удалить эту строку?")) {
+          row.remove();
+        }
+      });
+
+      lastCell.appendChild(deleteButton);
+    }
+  });
+
+  table.classList.add("editing");
+};
 
 
 
   window.saveTableData = function (button) {
-    const table = button.closest("section").querySelector("table");
-    const rows = table.querySelectorAll("tbody tr");
-    let isValid = true;
+  const table = button.closest("section").querySelector("table");
+  const rows = table.querySelectorAll("tbody tr");
+  let isValid = true;
 
-    rows.forEach(function (row) {
-      const cells = row.querySelectorAll("td");
-      const wins = cells[3].textContent.trim();
-      const draws = cells[4].textContent.trim();
-      const losses = cells[5].textContent.trim();
-      const goalsFor = cells[6].textContent.trim();
-      const goalsAgainst = cells[7].textContent.trim();
+  rows.forEach(function (row) {
+    const cells = row.querySelectorAll("td");
+    const wins = cells[3].textContent.trim();
+    const draws = cells[4].textContent.trim();
+    const losses = cells[5].textContent.trim();
+    const goalsFor = cells[6].textContent.trim();
+    const goalsAgainst = cells[7].textContent.trim();
 
-      if (![wins, draws, losses, goalsFor, goalsAgainst].every(isNonNegativeInteger)) {
-        alert("Значения числовых показателей должны быть неотрицательными.");
-        isValid = false;
-      }
-    });
+    if (![wins, draws, losses, goalsFor, goalsAgainst].every(isNonNegativeInteger)) {
+      alert("Вводимые числовые значения должны быть неотрицательными.");
+      isValid = false;
+    }
+  });
 
-    if (!isValid) {
-      return; 
+  if (!isValid) return;
+
+  rows.forEach(function (row) {
+    const cells = row.querySelectorAll("td");
+    cells[1].contentEditable = false;
+    for (let i = 3; i <= 7; i++) {
+      cells[i].contentEditable = false;
     }
 
-    rows.forEach(function (row) {
-      const cells = row.querySelectorAll("td");
-      cells[1].contentEditable = false;
-      for (let i = 3; i <= 7; i++) {
-        cells[i].contentEditable = false;
-      }
+    const deleteBtn = row.querySelector(".delete-button");
+    if (deleteBtn) {
+      deleteBtn.remove();
+    }
+  });
+
+  table.classList.remove("editing");
+
+  recalculateTableData();
+
+  const sectionId = table.closest("section").id;
+  const newRows = table.querySelectorAll("tbody tr");
+  const tableData = Array.from(newRows).map(function (row) {
+    return Array.from(row.querySelectorAll("td")).map(function (cell) {
+      return cell.textContent;
     });
+  });
 
-    table.classList.remove("editing");
-
-    recalculateTableData();
-
-    const sectionId = table.closest("section").id;
-    const tableData = Array.from(rows).map(function (row) {
-      return Array.from(row.querySelectorAll("td")).map(function (cell) {
-        return cell.textContent;
-      });
-    });
-
-    localStorage.setItem("tableData-" + sectionId, JSON.stringify(tableData));
-  };
+  localStorage.setItem("tableData-" + sectionId, JSON.stringify(tableData));
+};
 
   tables.forEach(function (table) {
   const sectionId = table.closest("section").id;
@@ -361,6 +382,21 @@ window.addTableRow = function (button) {
     }
 
     row.appendChild(cell);
+  }
+
+  const lastCell = row.querySelector("td:last-child");
+  if (lastCell) {
+    const deleteButton = document.createElement("button");
+    deleteButton.textContent = "X";
+    deleteButton.className = "delete-button";
+
+    deleteButton.addEventListener("click", function () {
+      if (confirm("Вы уверены, что хотите удалить эту строку?")) {
+        row.remove();
+      }
+    });
+
+    lastCell.appendChild(deleteButton);
   }
 
   tbody.appendChild(row);
