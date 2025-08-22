@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор Турниров Round Robin</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Генератор Турниров Round Robin</h1>
+
+        <div class="input-section">
+            <label for="teamsInput">Введите названия команд (каждая с новой строки):</label>
+            <textarea id="teamsInput" rows="10" placeholder="Команда А
+Команда Б
+Команда В
+Команда Г"></textarea>
+            <button id="generateBtn">Сгенерировать Расписание</button>
+        </div>
+
+        <div class="schedule-section" id="scheduleOutput">
+            <!-- Здесь будет выводиться расписание -->
+        </div>
+
+        <div class="standings-section" id="standingsOutput">
+            <h2>Турнирная Таблица</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Команда</th>
+                        <th>И</th>
+                        <th>В</th>
+                        <th>Н</th>
+                        <th>П</th>
+                        <th>ЗГ</th>
+                        <th>ПГ</th>
+                        <th>РМ</th>
+                        <th>Очки</th>
+                    </tr>
+                </thead>
+                <tbody id="standingsBody">
+                    <!-- Здесь будет выводиться турнирная таблица -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
