@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор Турниров Round Robin</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Генератор Турниров Round Robin</h1>
+
+        <div class="input-section">
+            <label for="teamsInput">Введите названия команд (каждая с новой строки):</label>
+            <textarea id="teamsInput" rows="10" placeholder="Команда А
+Команда Б
+Команда В
+Команда Г"></textarea>
+            <button id="generateBtn">Сгенерировать Расписание</button>
+            <button id="resetBtn" class="reset-button">Сбросить все данные</button>
+        </div>
+
+        <!-- Секция для управления расписанием -->
+        <div class="schedule-control">
+            <h2>Управление турами</h2>
+            <div class="tour-navigation">
+                <button id="prevTourBtn" disabled>< Предыдущий тур</button>
+                <span>Тур <span id="currentTourNum">1</span> из <span id="totalToursNum">0</span></span>
+                <button id="nextTourBtn" disabled>Следующий тур ></button>
+                <input type="number" id="tourJumpInput" min="1" placeholder="№ тура">
+                <button id="jumpToTourBtn">Перейти</button>
+            </div>
+            <button id="showFullScheduleBtn">Показать полное расписание</button>
+            <button id="showStandingsBtn">Показать турнирную таблицу</button> <!-- Новая кнопка -->
+        </div>
+
+        <!-- Секция для текущего тура (будет скрыта, когда включен показ таблицы) -->
+        <div class="schedule-section" id="currentTourOutput">
+            <!-- Здесь будет выводиться расписание текущего тура -->
+            <p>Введите команды и нажмите "Сгенерировать Расписание".</p>
+        </div>
+
+    </div> <!-- конец .container -->
+
+    <!-- Модальное окно для полного расписания -->
+    <div id="fullScheduleModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Полное расписание</h2>
+            <div id="fullScheduleContent">
+                <!-- Здесь будет выводиться полное расписание -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для турнирной таблицы -->
+    <div id="standingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Турнирная Таблица</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th> <!-- Номер по порядку -->
+                        <th>Команда</th>
+                        <th>И</th>
+                        <th>В</th>
+                        <th>Н</th>
+                        <th>П</th>
+                        <th>ЗГ</th>
+                        <th>ПГ</th>
+                        <th>РМ</th>
+                        <th>Очки</th>
+                    </tr>
+                </thead>
+                <tbody id="standingsBodyModal">
+                    <!-- Здесь будет выводиться турнирная таблица -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Модальное окно для ввода Spotify ссылки (пример, если понадобится) -->
+    <div id="spotifyModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Добавить ссылку на песню</h2>
+            <p>Скопируйте сюда ссылку на трек из Spotify:</p>
+            <input type="text" id="spotifyUrlInput" placeholder="https://open.spotify.com/track/...">
+            <button id="saveSpotifyUrlBtn">Сохранить</button>
+            <p id="currentSpotifyInfo"></p> <!-- Для отображения текущей ссылки -->
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
