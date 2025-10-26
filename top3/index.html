@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ж</title>
-    <!-- Ссылка на внешний CSS файл -->
+    <title>Генератор Турниров Round Robin</title>
     <link rel="stylesheet" href="style.css"> 
 </head>
 <body>
@@ -21,7 +20,6 @@
             <button id="resetBtn" class="reset-button">Сбросить все данные</button>
         </div>
 
-        <!-- Секция для управления турами -->
         <div class="schedule-control">
             <h2>Управление турами</h2>
             <div class="tour-navigation">
@@ -35,25 +33,20 @@
             <button id="showStandingsBtn">Показать турнирную таблицу</button>
         </div>
 
-        <!-- Секция для отображения текущего тура -->
         <div class="schedule-section" id="currentTourOutput">
             <p>Введите команды и нажмите "Сгенерировать Расписание".</p>
         </div>
 
-    </div> <!-- конец .container -->
+    </div>
 
-    <!-- Модальное окно для полного расписания -->
     <div id="fullScheduleModal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
             <h2>Полное расписание</h2>
-            <div id="fullScheduleContent">
-                <!-- Здесь будет выводиться полное расписание -->
-            </div>
+            <div id="fullScheduleContent"></div>
         </div>
     </div>
 
-    <!-- Модальное окно для турнирной таблицы -->
     <div id="standingsModal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
@@ -61,7 +54,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th>#</th> <!-- Номер по порядку -->
+                        <th>#</th>
                         <th>Команда</th>
                         <th>И</th>
                         <th>В</th>
@@ -73,14 +66,11 @@
                         <th>Очки</th>
                     </tr>
                 </thead>
-                <tbody id="standingsBodyModal">
-                    <!-- Здесь будет выводиться турнирная таблица -->
-                </tbody>
+                <tbody id="standingsBodyModal"></tbody>
             </table>
         </div>
     </div>
 
-    <!-- Модальное окно для ввода Spotify ссылки -->
     <div id="spotifyModal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
@@ -91,7 +81,6 @@
         </div>
     </div>
 
-    <!-- Ссылка на внешний JS файл -->
     <script src="script.js"></script> 
 </body>
-</html>
+                </html>
