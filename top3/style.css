@@ -56,7 +56,7 @@ button:disabled {
     background-color: #a30000;
 }
 
-textarea, input[type="number"], input[type="text"] { /* Добавлен input[type="text"] для Spotify URL */
+textarea, input[type="number"], input[type="text"] {
     width: calc(100% - 20px);
     padding: 10px;
     margin-bottom: 10px;
@@ -195,13 +195,24 @@ td {
 }
 
 /* Стили для Spotify ссылок */
-.spotify-link {
+.spotify-link-home { /* Стили для левой нотки */
     color: #1db954; /* Ярко-зеленый цвет Spotify */
     text-decoration: none;
     font-weight: bold;
     font-size: 18px; /* Чуть больше, чтобы было заметнее */
     margin: 0 5px; /* Небольшой отступ между кнопками */
     transition: color 0.3s ease;
+    order: 1; /* Первый элемент в flex */
+}
+
+.spotify-link-away { /* Стили для правой нотки */
+    color: #1db954; /* Ярко-зеленый цвет Spotify */
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 18px;
+    margin: 0 5px;
+    transition: color 0.3s ease;
+    order: 4; /* Последний элемент в flex */
 }
 
 .spotify-link:hover {
