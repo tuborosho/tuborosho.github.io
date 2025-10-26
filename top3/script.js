@@ -43,7 +43,6 @@ function saveData() {
     localStorage.setItem(STORAGE_KEY_TEAMS, JSON.stringify(teams));
     localStorage.setItem(STORAGE_KEY_SCHEDULE, JSON.stringify(schedule));
     localStorage.setItem(STORAGE_KEY_CURRENT_TOUR, currentTourIndex.toString());
-    // Статистика `standings` будет пересчитываться при необходимости, поэтому ее отдельно сохранять не нужно
 }
 
 function loadData() {
@@ -150,6 +149,7 @@ function displayTour(tourIndex) {
 
             // Формируем HTML для матча
             matchElement.innerHTML = `
+                <a href="#" class="spotify-link-home" data-tour-index="${tourIndex}" data-match-index="${matchIndex}" data-team="home" title="Добавить песню">🎶</a>
                 <span class="team-name">${match.homeTeam}</span>
                 <div class="score-input">
                     <input type="number" class="score-home" min="0" max="10" value="${match.homeScore || ''}" data-tour-index="${tourIndex}" data-match-index="${matchIndex}" data-team="home" placeholder="-">
@@ -157,10 +157,7 @@ function displayTour(tourIndex) {
                     <input type="number" class="score-away" min="0" max="10" value="${match.awayScore || ''}" data-tour-index="${tourIndex}" data-match-index="${matchIndex}" data-team="away" placeholder="-">
                 </div>
                 <span class="team-name">${match.awayTeam}</span>
-                <div class="spotify-links">
-                    <a href="#" class="spotify-link" data-tour-index="${tourIndex}" data-match-index="${matchIndex}" data-team="home" title="Добавить песню">🎶</a>
-                    <a href="#" class="spotify-link" data-tour-index="${tourIndex}" data-match-index="${matchIndex}" data-team="away" title="Добавить песню">🎶</a>
-                </div>
+                <a href="#" class="spotify-link-away" data-tour-index="${tourIndex}" data-match-index="${matchIndex}" data-team="away" title="Добавить песню">🎶</a>
             `;
 
             // Вставляем кнопки удаления перед названиями команд
@@ -228,23 +225,6 @@ function generateSchedule() {
         const rotatingTeams = currentTeams.slice(1);
         const lastTeam = rotatingTeams.pop();
         currentTeams = [firstTeam, lastTeam, ...rotatingTeams];
-    }
-    // Если количество команд нечетное, нужно добавить "BYE"
-    if (numTeams % 2 !== 0) {
-        // Вставляем 'BYE' в нужную позицию для каждого тура
-        schedule.forEach((tour, tourIndex) => {
-            const byeTeamIndex = (tourIndex % numTeams); // Индекс, куда вставить 'BYE'
-            const byeTeam = teams[byeTeamIndex]; // Находим, какая команда должна отдыхать
-
-            // Находим, какая команда должна быть "BYE" в текущем туре
-            // Это сложная логика, для простоты будем считать, что "BYE" команда всегда одна и та же
-            // Более корректно: найти команду, которая не играет в этом туре
-            // Для текущей реализации Round Robin, проще добавить "BYE" как команду, если она нечетная
-            // Но так как у нас 149 туров, предполагается много команд, где BYE не будет
-            // Если команд четное число, этот блок пропускается.
-        });
-        // Если количество команд действительно нечетное, нужно пересмотреть логику генерации.
-        // В данном случае, предполагаем, что количество команд четное, и 149 туров - это следствие большого числа команд.
     }
 }
 
@@ -446,7 +426,7 @@ function displayFullSchedule() {
 
                 const homeSpotifyLink = document.createElement('a');
                 homeSpotifyLink.href = match.homeSpotifyUrl || "#";
-                homeSpotifyLink.className = 'spotify-link';
+                homeSpotifyLink.className = 'spotify-link-home'; // Изменен класс
                 homeSpotifyLink.dataset.tourIndex = tourIndex;
                 homeSpotifyLink.dataset.matchIndex = schedule.indexOf(tour); // Индекс матча в туре
                 homeSpotifyLink.dataset.team = "home";
@@ -460,7 +440,7 @@ function displayFullSchedule() {
 
                 const awaySpotifyLink = document.createElement('a');
                 awaySpotifyLink.href = match.awaySpotifyUrl || "#";
-                awaySpotifyLink.className = 'spotify-link';
+                awaySpotifyLink.className = 'spotify-link-away'; // Изменен класс
                 awaySpotifyLink.dataset.tourIndex = tourIndex;
                 awaySpotifyLink.dataset.matchIndex = schedule.indexOf(tour);
                 awaySpotifyLink.dataset.team = "away";
@@ -480,11 +460,11 @@ function displayFullSchedule() {
                 matchItem.appendChild(awayTeamSpan);
                 matchItem.appendChild(spotifyLinksDiv);
 
-                matchesList.appendChild(matchItem);
+                tourDiv.appendChild(matchItem); // Вставляем matchItem в tourDiv
             });
-            tourDiv.appendChild(matchesList);
+            fullScheduleContent.appendChild(tourDiv); // Добавляем tourDiv в fullScheduleContent
         }
-        fullScheduleContent.appendChild(tourDiv);
+        fullScheduleContent.appendChild(tourDiv); // Добавляем tourDiv в fullScheduleContent
     });
 }
 
@@ -533,7 +513,8 @@ saveSpotifyUrlBtn.onclick = () => {
         displayTour(currentTourIndex);
         displayFullSchedule();
 
-        const linkElement = document.querySelector(`.spotify-link[data-tour-index='${tourIndex}'][data-match-index='${matchIndex}'][data-team='${teamType}']`);
+        // Находим правильный элемент ссылки
+        const linkElement = document.querySelector(`.spotify-link-${teamType}[data-tour-index='${tourIndex}'][data-match-index='${matchIndex}']`);
         if (linkElement) {
             linkElement.href = url;
             linkElement.target = "_blank";
@@ -551,7 +532,7 @@ saveSpotifyUrlBtn.onclick = () => {
         displayTour(currentTourIndex);
         displayFullSchedule();
 
-        const linkElement = document.querySelector(`.spotify-link[data-tour-index='${tourIndex}'][data-match-index='${matchIndex}'][data-team='${teamType}']`);
+        const linkElement = document.querySelector(`.spotify-link-${teamType}[data-tour-index='${tourIndex}'][data-match-index='${matchIndex}']`);
         if (linkElement) {
             linkElement.href = "#";
             linkElement.target = "_self";
@@ -673,18 +654,19 @@ window.onclick = (event) => {
 // --- Функция добавления слушателей на поля ввода счета ---
 function addScoreInputListeners() {
     document.querySelectorAll('.score-input input').forEach(input => {
+        // Обработчик ввода счета
         input.addEventListener('input', (e) => {
             const tourIndex = parseInt(e.target.dataset.tourIndex);
             const matchIndex = parseInt(e.target.dataset.matchIndex);
             const teamType = e.target.dataset.team; // 'home' или 'away'
 
             if (schedule[tourIndex] && schedule[tourIndex][matchIndex]) {
-                // Получаем оба счета
+                // Получаем оба счета, преобразуя в числа, или 0 если ввод некорректен/пуст
                 const scoreHomeInput = e.target.closest('.match-item').querySelector('.score-home');
                 const scoreAwayInput = e.target.closest('.match-item').querySelector('.score-away');
 
-                const scoreHome = parseInt(scoreHomeInput.value) || 0;
-                const scoreAway = parseInt(scoreAwayInput.value) || 0;
+                const scoreHome = parseInt(scoreHomeInput.value) >= 0 ? parseInt(scoreHomeInput.value) : 0;
+                const scoreAway = parseInt(scoreAwayInput.value) >= 0 ? parseInt(scoreAwayInput.value) : 0;
 
                 // Обновляем счет в данных расписания
                 schedule[tourIndex][matchIndex].score = `${scoreHome}:${scoreAway}`;
@@ -702,10 +684,10 @@ function addScoreInputListeners() {
             }
         });
 
-        // Обработка клавиш для ввода счета
+        // Обработка клавиш для ввода счета (делаем ввод более гибким)
         input.addEventListener('keydown', (e) => {
-            // Разрешаем только цифры, двоеточие, Backspace, Delete, стрелки, Tab
-            if (e.key.length === 1 && !/[0-9:]/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+            // Разрешаем только цифры, Backspace, Delete, стрелки, Tab
+            if (e.key.length === 1 && !/[0-9]/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
                 e.preventDefault();
             }
             // Позволяем переходить между полями ввода счета (home -> away)
@@ -719,28 +701,45 @@ function addScoreInputListeners() {
             }
         });
 
-        // Очистка при фокусе, если значение '-'
+        // Очистка поля при фокусе
         input.addEventListener('focus', (e) => {
-            if (e.target.value === '-' || e.target.value === '') {
+            if (e.target.value === '-') {
                 e.target.value = '';
             }
         });
 
-        // Восстановление '-' если поле пустое после потери фокуса
+        // Установка '-' или 0, если поле пустое после потери фокуса
         input.addEventListener('blur', (e) => {
-            if (e.target.value === '') {
-                e.target.value = '-'; // Или просто оставляем пустым, если не хотим '-'
-                // Нужно обновить счет в schedule, если он был очищен
-                const tourIndex = parseInt(e.target.dataset.tourIndex);
-                const matchIndex = parseInt(e.target.dataset.matchIndex);
-                if (schedule[tourIndex] && schedule[tourIndex][matchIndex]) {
-                     const scoreHome = parseInt(e.target.closest('.match-item').querySelector('.score-home').value) || 0;
-                     const scoreAway = parseInt(e.target.closest('.match-item').querySelector('.score-away').value) || 0;
-                     schedule[tourIndex][matchIndex].score = `${scoreHome}:${scoreAway}`;
-                     updateStandingsDataAndDisplay();
-                     validateTourResults(schedule[tourIndex]);
-                     saveData();
+            const tourIndex = parseInt(e.target.dataset.tourIndex);
+            const matchIndex = parseInt(e.target.dataset.matchIndex);
+            const teamType = e.target.dataset.team;
+
+            if (schedule[tourIndex] && schedule[tourIndex][matchIndex]) {
+                const scoreHomeInput = e.target.closest('.match-item').querySelector('.score-home');
+                const scoreAwayInput = e.target.closest('.match-item').querySelector('.score-away');
+
+                // Получаем актуальные значения счетов
+                const scoreHome = parseInt(scoreHomeInput.value) >= 0 ? parseInt(scoreHomeInput.value) : 0;
+                const scoreAway = parseInt(scoreAwayInput.value) >= 0 ? parseInt(scoreAwayInput.value) : 0;
+
+                // Обновляем счет в schedule
+                schedule[tourIndex][matchIndex].score = `${scoreHome}:${scoreAway}`;
+
+                // Если оба поля пустые (или были очищены), выводим '-'
+                if (scoreHomeInput.value === '' && scoreAwayInput.value === '') {
+                    scoreHomeInput.value = '-';
+                    scoreAwayInput.value = '-';
+                    schedule[tourIndex][matchIndex].score = ""; // Сбрасываем счет, если оба поля пустые
+                } else {
+                    // Убедимся, что пустые поля получают 0
+                    if (scoreHomeInput.value === '') scoreHomeInput.value = '0';
+                    if (scoreAwayInput.value === '') scoreAwayInput.value = '0';
                 }
+
+                // Обновляем статистику и таблицу
+                updateStandingsDataAndDisplay();
+                validateTourResults(schedule[tourIndex]);
+                saveData();
             }
         });
     });
