@@ -147,7 +147,7 @@ function displayTour(tourIndex) {
                 removeTeam(match.awayTeam);
             };
 
-            // Формируем HTML для матча
+            // Формируем HTML для матча с измененным расположением Spotify иконок
             matchElement.innerHTML = `
                 <a href="#" class="spotify-link-home" data-tour-index="${tourIndex}" data-match-index="${matchIndex}" data-team="home" title="Добавить песню">🎶</a>
                 <span class="team-name">${match.homeTeam}</span>
@@ -426,7 +426,7 @@ function displayFullSchedule() {
 
                 const homeSpotifyLink = document.createElement('a');
                 homeSpotifyLink.href = match.homeSpotifyUrl || "#";
-                homeSpotifyLink.className = 'spotify-link-home'; // Изменен класс
+                homeSpotifyLink.className = 'spotify-link-home'; // Используем новый класс
                 homeSpotifyLink.dataset.tourIndex = tourIndex;
                 homeSpotifyLink.dataset.matchIndex = schedule.indexOf(tour); // Индекс матча в туре
                 homeSpotifyLink.dataset.team = "home";
@@ -440,7 +440,7 @@ function displayFullSchedule() {
 
                 const awaySpotifyLink = document.createElement('a');
                 awaySpotifyLink.href = match.awaySpotifyUrl || "#";
-                awaySpotifyLink.className = 'spotify-link-away'; // Изменен класс
+                awaySpotifyLink.className = 'spotify-link-away'; // Используем новый класс
                 awaySpotifyLink.dataset.tourIndex = tourIndex;
                 awaySpotifyLink.dataset.matchIndex = schedule.indexOf(tour);
                 awaySpotifyLink.dataset.team = "away";
@@ -633,24 +633,6 @@ showStandingsBtn.onclick = () => {
     openModal(standingsModal);
 };
 
-// Обработчики закрытия модальных окон
-closeFullScheduleBtn.onclick = () => closeModal(fullScheduleModal);
-closeStandingsBtn.onclick = () => closeModal(standingsModal);
-closeSpotifyModalBtn.onclick = () => closeModal(spotifyModal);
-
-// Закрытие модальных окон при клике вне их содержимого
-window.onclick = (event) => {
-    if (event.target === fullScheduleModal) {
-        closeModal(fullScheduleModal);
-    }
-    if (event.target === standingsModal) {
-        closeModal(standingsModal);
-    }
-    if (event.target === spotifyModal) {
-        closeModal(spotifyModal);
-    }
-};
-
 // --- Функция добавления слушателей на поля ввода счета ---
 function addScoreInputListeners() {
     document.querySelectorAll('.score-input input').forEach(input => {
@@ -665,14 +647,12 @@ function addScoreInputListeners() {
                 const scoreHomeInput = e.target.closest('.match-item').querySelector('.score-home');
                 const scoreAwayInput = e.target.closest('.match-item').querySelector('.score-away');
 
+                // Проверяем, что значение является числом, иначе ставим 0
                 const scoreHome = parseInt(scoreHomeInput.value) >= 0 ? parseInt(scoreHomeInput.value) : 0;
                 const scoreAway = parseInt(scoreAwayInput.value) >= 0 ? parseInt(scoreAwayInput.value) : 0;
 
                 // Обновляем счет в данных расписания
                 schedule[tourIndex][matchIndex].score = `${scoreHome}:${scoreAway}`;
-
-                // Пересчитываем статистику и обновляем таблицу
-                updateStandingsDataAndDisplay();
 
                 // Перерисовываем текущий тур, чтобы обновить отображение счетов и Spotify кнопки
                 displayTour(currentTourIndex);
@@ -680,13 +660,15 @@ function addScoreInputListeners() {
                 // Проверяем результат тура после ввода счета
                 validateTourResults(schedule[tourIndex]);
 
+                // Пересчитываем статистику и обновляем таблицу
+                updateStandingsDataAndDisplay();
+
                 saveData(); // Сохраняем после каждого ввода счета
             }
         });
 
-        // Обработка клавиш для ввода счета (делаем ввод более гибким)
+        // Обработка клавиш для ввода счета (разрешаем только цифры)
         input.addEventListener('keydown', (e) => {
-            // Разрешаем только цифры, Backspace, Delete, стрелки, Tab
             if (e.key.length === 1 && !/[0-9]/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
                 e.preventDefault();
             }
@@ -695,13 +677,14 @@ function addScoreInputListeners() {
                 e.target.closest('.match-item').querySelector('.score-away').focus();
                 e.preventDefault();
             }
+            // Позволяем переходить между полями ввода счета (away -> home)
             if (e.key === 'ArrowLeft' && e.target.classList.contains('score-away')) {
                 e.target.closest('.match-item').querySelector('.score-home').focus();
                 e.preventDefault();
             }
         });
 
-        // Очистка поля при фокусе
+        // Очистка поля при фокусе, если значение '-'
         input.addEventListener('focus', (e) => {
             if (e.target.value === '-') {
                 e.target.value = '';
@@ -718,20 +701,20 @@ function addScoreInputListeners() {
                 const scoreHomeInput = e.target.closest('.match-item').querySelector('.score-home');
                 const scoreAwayInput = e.target.closest('.match-item').querySelector('.score-away');
 
-                // Получаем актуальные значения счетов
+                // Получаем актуальные значения счетов, преобразуя их в числа (или 0, если пусто)
                 const scoreHome = parseInt(scoreHomeInput.value) >= 0 ? parseInt(scoreHomeInput.value) : 0;
                 const scoreAway = parseInt(scoreAwayInput.value) >= 0 ? parseInt(scoreAwayInput.value) : 0;
 
                 // Обновляем счет в schedule
                 schedule[tourIndex][matchIndex].score = `${scoreHome}:${scoreAway}`;
 
-                // Если оба поля пустые (или были очищены), выводим '-'
+                // Если оба поля были пустыми, устанавливаем '-'
                 if (scoreHomeInput.value === '' && scoreAwayInput.value === '') {
                     scoreHomeInput.value = '-';
                     scoreAwayInput.value = '-';
                     schedule[tourIndex][matchIndex].score = ""; // Сбрасываем счет, если оба поля пустые
                 } else {
-                    // Убедимся, что пустые поля получают 0
+                    // Если одно из полей было пустым, устанавливаем '0'
                     if (scoreHomeInput.value === '') scoreHomeInput.value = '0';
                     if (scoreAwayInput.value === '') scoreAwayInput.value = '0';
                 }
