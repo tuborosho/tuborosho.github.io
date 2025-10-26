@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Музыкальный Чемпионат Round Robin</title>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --text-color: #ffffff;
+            --accent-color: #ff6b35;
+            --secondary-color: #ff8c5a;
+            --table-header: #2d2d2d;
+            --table-row: #252525;
+            --table-row-alt: #2a2a2a;
+            --relegation-zone: #5c2a2a;
+            --playoff-zone: #5c4a2a;
+            --input-bg: #333333;
+            --border-color: #444444;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            background-color: #222222;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 30px rgba(255, 107, 53, 0.1);
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: var(--accent-color);
+            margin-bottom: 25px;
+        }
+
+        .input-section, .standings-section, .schedule-control, .schedule-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: #2a2a2a;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #ddd;
+        }
+
+        textarea {
+            width: calc(100% - 22px);
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 16px;
+            resize: vertical;
+            box-sizing: border-box;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+        }
+
+        button {
+            padding: 10px 18px;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+
+        button:last-child {
+            margin-right: 0;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background-color: #666666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .input-section button#generateBtn {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .input-section button.reset-button {
+            background-color: #dc3545;
+        }
+
+        .input-section button.reset-button:hover {
+            background-color: #c82333;
+        }
+
+        .standings-section table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .standings-section th, .standings-section td {
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            text-align: center;
+            font-size: 15px;
+        }
+
+        .standings-section th {
+            background-color: var(--accent-color);
+            color: white;
+            font-weight: bold;
+        }
+
+        .standings-section tr:nth-child(even) {
+            background-color: var(--table-row-alt);
+        }
+
+        .standings-section tr:nth-child(odd) {
+            background-color: var(--table-row);
+        }
+
+        .standings-section tr.relegation-zone {
+            background-color: var(--relegation-zone) !important;
+        }
+
+        .standings-section tr.playoff-zone {
+            background-color: var(--playoff-zone) !important;
+        }
+		.schedule-control {
+            text-align: center;
+            border-top: 2px solid var(--accent-color);
+            padding-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .tour-navigation {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .tour-navigation button, .tour-navigation input {
+            margin: 5px;
+        }
+
+        .tour-navigation span {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin: 0 10px;
+            min-width: 150px;
+        }
+
+        .tour-navigation input[type="number"] {
+            width: 80px;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            text-align: center;
+            font-size: 16px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+        }
+
+        .schedule-section {
+            min-height: 100px;
+            border-top: none;
+            padding-top: 10px;
+        }
+
+        .tour-display {
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background-color: #333333;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .tour-display h3 {
+            color: var(--accent-color);
+            margin-top: 0;
+            border-bottom: 1px dashed #ccc;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .match {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 17px;
+            flex-wrap: wrap;
+            padding: 8px;
+            border-radius: 6px;
+            background-color: #3a3a3a;
+        }
+
+        .score-input {
+            width: 50px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            padding: 5px;
+            font-size: 16px;
+            margin: 0 5px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+        }
+
+        .score-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 5px rgba(255, 107, 53, 0.5);
+        }
+
+        /* Стили для Spotify ссылок */
+        .spotify-link {
+            color: #1DB954;
+            text-decoration: none;
+            font-size: 16px;
+            margin: 0 5px;
+        }
+
+        .spotify-link:hover {
+            color: #1ed760;
+        }
+
+        /* Кнопка удаления команды */
+        .delete-team {
+            color: #ff4444;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .delete-team:hover {
+            color: #ff6666;
+            background-color: rgba(255, 68, 68, 0.1);
+        }
+
+        /* Вкладки */
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--accent-color);
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            border-bottom-color: var(--accent-color);
+            background-color: rgba(255, 107, 53, 0.1);
+        }
+
+        .tab:hover:not(.active) {
+            background-color: rgba(255, 107, 53, 0.05);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+		/* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #2a2a2a;
+            margin: 5% auto;
+            padding: 30px;
+            border: 1px solid var(--border-color);
+            width: 80%;
+            max-width: 700px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .modal-content h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .close-button {
+            color: #aaa;
+            position: absolute;
+            top: 10px;
+            right: 25px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        #fullScheduleContent {
+            max-height: 500px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            background-color: #333;
+            border-radius: 5px;
+        }
+
+        #fullScheduleContent .tour-full {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: #3a3a3a;
+        }
+
+        #fullScheduleContent .tour-full h4 {
+            color: var(--accent-color);
+            margin-top: 0;
+            margin-bottom: 10px;
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 5px;
+        }
+
+        #fullScheduleContent .match-full {
+            margin-bottom: 5px;
+            font-size: 0.95em;
+            color: #ddd;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+                margin: 10px auto;
+            }
+            .tour-navigation {
+                flex-direction: column;
+            }
+            .tour-navigation button, .tour-navigation input, .tour-navigation span {
+                margin: 5px 0;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .tour-navigation span {
+                min-width: unset;
+            }
+            .modal-content {
+                width: 95%;
+                margin: 20px auto;
+                padding: 15px;
+            }
+            .tabs {
+                flex-direction: column;
+            }
+            .tab {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 Музыкальный Чемпионат Round Robin</h1>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="input">Ввод команд</button>
+            <button class="tab" data-tab="schedule">Расписание</button>
+            <button class="tab" data-tab="standings">Таблица</button>
+        </div>
+
+        <div class="tab-content active" id="input-tab">
+            <div class="input-section">
+                <label for="teamsInput">Введите названия песен (каждая с новой строки):</label>
+                <textarea id="teamsInput" rows="15" placeholder="Название песни 1
+Название песни 2
+Название песни 3"></textarea>
+                <button id="generateBtn">Сгенерировать Расписание</button>
+                <button id="resetBtn" class="reset-button">Сбросить все данные</button>
+            </div>
+        </div>
+		<div class="tab-content" id="schedule-tab">
+            <div class="schedule-control">
+                <h2>🎯 Расписание матчей</h2>
+                <div class="tour-navigation">
+                    <button id="prevTourBtn" disabled>⬅️ Предыдущий тур</button>
+                    <span>Тур <span id="currentTourNum">1</span> из <span id="totalToursNum">0</span></span>
+                    <button id="nextTourBtn" disabled>Следующий тур ➡️</button>
+                    <input type="number" id="tourJumpInput" min="1" placeholder="№ тура">
+                    <button id="jumpToTourBtn">Перейти</button>
+                    <button id="jumpToFirstEmptyBtn">К первому незаполненному</button>
+                </div>
+                <button id="showFullScheduleBtn">📋 Показать полное расписание</button>
+            </div>
+
+            <div class="schedule-section" id="currentTourOutput">
+                <!-- Здесь будет выводиться расписание текущего тура -->
+            </div>
+        </div>
+
+        <div class="tab-content" id="standings-tab">
+            <div class="standings-section">
+                <h2>🏆 Турнирная Таблица</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Песня</th>
+                            <th>И</th>
+                            <th>В</th>
+                            <th>Н</th>
+                            <th>П</th>
+                            <th>ЗГ</th>
+                            <th>ПГ</th>
+                            <th>РМ</th>
+                            <th>Очки</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="standingsBody">
+                        <!-- Здесь будет выводиться турнирная таблица -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для полного расписания -->
+    <div id="fullScheduleModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">×</span>
+            <h2>Полное расписание</h2>
+            <div id="fullScheduleContent">
+                <!-- Здесь будет выводиться полное расписание -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Элементы страницы
+            const teamsInput = document.getElementById('teamsInput');
+            const generateBtn = document.getElementById('generateBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const standingsBody = document.getElementById('standingsBody');
+            const currentTourOutput = document.getElementById('currentTourOutput');
+            const prevTourBtn = document.getElementById('prevTourBtn');
+            const nextTourBtn = document.getElementById('nextTourBtn');
+            const currentTourNumSpan = document.getElementById('currentTourNum');
+            const totalToursNumSpan = document.getElementById('totalToursNum');
+            const tourJumpInput = document.getElementById('tourJumpInput');
+            const jumpToTourBtn = document.getElementById('jumpToTourBtn');
+            const jumpToFirstEmptyBtn = document.getElementById('jumpToFirstEmptyBtn');
+            const showFullScheduleBtn = document.getElementById('showFullScheduleBtn');
+            const fullScheduleModal = document.getElementById('fullScheduleModal');
+            const closeButton = document.querySelector('.close-button');
+            const fullScheduleContent = document.getElementById('fullScheduleContent');
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            let schedule = [];
+            let teams = [];
+            let currentTourIndex = 0;
+            let teamSpotifyLinks = {};
+			// Переключение вкладок
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.dataset.tab;
+                    
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    tab.classList.add('active');
+                    document.getElementById(${tabId}-tab).classList.add('active');
+                });
+            });
+
+            // Загрузка данных при старте
+            loadData();
+            if (schedule.length > 0) {
+                teamsInput.value = teams.filter(t => t !== 'BYE').join('\n');
+                renderCurrentTour();
+                calculateAndRenderStandings();
+                updateTourNavigation();
+                switchToTab('schedule');
+                jumpToFirstEmptyMatch();
+            }
+
+            // Обработчики событий
+            generateBtn.addEventListener('click', generateSchedule);
+            resetBtn.addEventListener('click', resetAllData);
+            prevTourBtn.addEventListener('click', goToPrevTour);
+            nextTourBtn.addEventListener('click', goToNextTour);
+            jumpToTourBtn.addEventListener('click', jumpToTour);
+            jumpToFirstEmptyBtn.addEventListener('click', jumpToFirstEmptyMatch);
+            showFullScheduleBtn.addEventListener('click', showFullSchedule);
+            closeButton.addEventListener('click', closeModal);
+            window.addEventListener('click', closeModalOnOutsideClick);
+
+            function generateSchedule() {
+                const rawTeams = teamsInput.value.split('\n').map(team => team.trim()).filter(team => team !== '');
+                if (rawTeams.length < 2) {
+                    alert('Пожалуйста, введите как минимум две песни.');
+                    return;
+                }
+
+                teams = rawTeams;
+                
+                // Инициализируем Spotify ссылки
+                teams.forEach(team => {
+                    if (!teamSpotifyLinks[team]) {
+                        teamSpotifyLinks[team] = { home: '', away: '' };
+                    }
+                });
+
+                schedule = generateRoundRobinSchedule(teams);
+                currentTourIndex = 0;
+                renderCurrentTour();
+                calculateAndRenderStandings();
+                updateTourNavigation();
+                saveData();
+                switchToTab('schedule');
+                jumpToFirstEmptyMatch();
+            }
+
+            function generateRoundRobinSchedule(teamNames) {
+                let currentTeams = [...teamNames];
+                const generatedSchedule = [];
+
+                if (currentTeams.length % 2 !== 0) {
+                    currentTeams.push('BYE');
+                }
+
+                const numTeams = currentTeams.length;
+                const numRounds = numTeams - 1;
+
+                for (let round = 0; round < numRounds; round++) {
+                    const currentRoundMatches = [];
+                    for (let i = 0; i < numTeams / 2; i++) {
+                        const team1 = currentTeams[i];
+                        const team2 = currentTeams[numTeams - 1 - i];
+
+                        if (team1 !== 'BYE' && team2 !== 'BYE') {
+                            currentRoundMatches.push({
+                                home: team1,
+                                away: team2,
+                                homeScore: null,
+                                awayScore: null,
+                                homeSpotify: teamSpotifyLinks[team1]?.home || '',
+                                awaySpotify: teamSpotifyLinks[team2]?.away || ''
+                            });
+                        }
+                    }
+                    generatedSchedule.push(currentRoundMatches);
+					// Rotate teams
+                    const fixedTeam = currentTeams[0];
+                    const rotatingTeams = currentTeams.slice(1);
+                    rotatingTeams.unshift(rotatingTeams.pop());
+                    currentTeams = [fixedTeam, ...rotatingTeams];
+                }
+                return generatedSchedule;
+            }
+
+            function renderCurrentTour() {
+                currentTourOutput.innerHTML = '';
+                if (schedule.length === 0) {
+                    currentTourOutput.innerHTML = '<p style="text-align: center;">Сгенерируйте расписание, чтобы увидеть матчи.</p>';
+                    return;
+                }
+
+                const roundMatches = schedule[currentTourIndex];
+                const tourDiv = document.createElement('div');
+                tourDiv.classList.add('tour-display');
+                tourDiv.innerHTML = <h3>🎵 Тур ${currentTourIndex + 1}</h3>;
+
+                roundMatches.forEach((match, matchIndex) => {
+                    const matchDiv = document.createElement('div');
+                    matchDiv.classList.add('match');
+                    
+                    const homeSpotify = teamSpotifyLinks[match.home]?.home || '';
+                    const awaySpotify = teamSpotifyLinks[match.away]?.away || '';
+
+                    matchDiv.innerHTML = 
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            ${homeSpotify ? <a href="${homeSpotify}" class="spotify-link" target="_blank">🎵</a> : '<span class="spotify-link">🎵</span>'}
+                            <span>${match.home}</span>
+                        </div>
+                        <input type="number" class="score-input" min="0" max="4" data-round="${currentTourIndex}" data-match="${matchIndex}" data-team="home" value="${match.homeScore !== null ? match.homeScore : ''}" placeholder="0">
+                        <span>:</span>
+                        <input type="number" class="score-input" min="0" max="4" data-round="${currentTourIndex}" data-match="${matchIndex}" data-team="away" value="${match.awayScore !== null ? match.awayScore : ''}" placeholder="0">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span>${match.away}</span>
+                            ${awaySpotify ? <a href="${awaySpotify}" class="spotify-link" target="_blank">🎵</a> : '<span class="spotify-link">🎵</span>'}
+                        </div>
+                    ;
+                    tourDiv.appendChild(matchDiv);
+                });
+                currentTourOutput.appendChild(tourDiv);
+
+                document.querySelectorAll('.score-input').forEach(input => {
+                    input.addEventListener('input', validateAndUpdateScore);
+                });
+            }
+
+            function validateAndUpdateScore(event) {
+                const input = event.target;
+                const roundIndex = parseInt(input.dataset.round);
+                const matchIndex = parseInt(input.dataset.match);
+                const teamType = input.dataset.team;
+                let score = input.value === '' ? null : parseInt(input.value);
+
+                // Проверка на максимальное количество голов
+                if (score !== null && score > 4) {
+                    score = 4;
+                    input.value = 4;
+                }
+
+                if (roundIndex === currentTourIndex) {
+                    schedule[roundIndex][matchIndex][${teamType}Score] = score;
+                    
+                    // Проверка ничьих
+                    validateDraws(roundIndex);
+                    
+                    saveData();
+                    calculateAndRenderStandings();
+                }
+            }
+			function validateDraws(roundIndex) {
+                const roundMatches = schedule[roundIndex];
+                const draws = roundMatches.filter(match => 
+                    match.homeScore !== null && 
+                    match.awayScore !== null && 
+                    match.homeScore === match.awayScore
+                ).length;
+
+                if (draws > 1) {
+                    alert('Внимание! В туре может быть только одна ничья (1:1).');
+                    // Сбрасываем лишние ничьи
+                    let drawCount = 0;
+                    roundMatches.forEach(match => {
+                        if (match.homeScore !== null && match.awayScore !== null && match.homeScore === match.awayScore) {
+                            drawCount++;
+                            if (drawCount > 1) {
+                                match.homeScore = null;
+                                match.awayScore = null;
+                            }
+                        }
+                    });
+                    renderCurrentTour();
+                }
+            }
+
+            function calculateAndRenderStandings() {
+                const standings = {};
+                teams.filter(t => t !== 'BYE').forEach(team => {
+                    standings[team] = { P: 0, W: 0, D: 0, L: 0, GF: 0, GA: 0, GD: 0, Pts: 0 };
+                });
+
+                schedule.forEach(roundMatches => {
+                    roundMatches.forEach(match => {
+                        const homeTeam = match.home;
+                        const awayTeam = match.away;
+                        const homeScore = match.homeScore;
+                        const awayScore = match.awayScore;
+
+                        if (homeScore === null  awayScore === null  !standings[homeTeam] || !standings[awayTeam]) {
+                            return;
+                        }
+
+                        standings[homeTeam].P++;
+                        standings[awayTeam].P++;
+                        standings[homeTeam].GF += homeScore;
+                        standings[homeTeam].GA += awayScore;
+                        standings[awayTeam].GF += awayScore;
+                        standings[awayTeam].GA += homeScore;
+
+                        if (homeScore > awayScore) {
+                            standings[homeTeam].W++;
+                            standings[homeTeam].Pts += 3;
+                            standings[awayTeam].L++;
+                        } else if (homeScore < awayScore) {
+                            standings[awayTeam].W++;
+                            standings[awayTeam].Pts += 3;
+                            standings[homeTeam].L++;
+                        } else {
+                            standings[homeTeam].D++;
+                            standings[homeTeam].Pts += 1;
+                            standings[awayTeam].D++;
+                            standings[awayTeam].Pts += 1;
+                        }
+                    });
+                });
+
+                for (const team in standings) {
+                    standings[team].GD = standings[team].GF - standings[team].GA;
+                }
+
+                const sortedStandings = Object.entries(standings).sort((a, b) => {
+                    const teamA = a[1];
+                    const teamB = b[1];
+                    if (teamA.Pts !== teamB.Pts) return teamB.Pts - teamA.Pts;
+                    if (teamA.GD !== teamB.GD) return teamB.GD - teamA.GD;
+                    return teamB.GF - teamA.GF;
+                });
+
+                standingsBody.innerHTML = '';
+                sortedStandings.forEach(([teamName, stats], index) => {
+                    const row = standingsBody.insertRow();
+                    
+                    // Определяем зоны
+                    if (index >= 120 && index < 150) {
+                        row.classList.add('relegation-zone');
+                    } else if (index >= 100 && index < 120) {
+                        row.classList.add('playoff-zone');
+                    }
+					const spotifyLink = teamSpotifyLinks[teamName]?.home || '';
+                    
+                    row.innerHTML = 
+                        <td>${index + 1}</td>
+                        <td>
+                            ${spotifyLink ? <a href="${spotifyLink}" class="spotify-link" target="_blank">🎵</a> : ''}
+                            ${teamName}
+                        </td>
+                        <td>${stats.P}</td>
+                        <td>${stats.W}</td>
+                        <td>${stats.D}</td>
+                        <td>${stats.L}</td>
+                        <td>${stats.GF}</td>
+                        <td>${stats.GA}</td>
+                        <td>${stats.GD}</td>
+                        <td><strong>${stats.Pts}</strong></td>
+                        <td>
+                            <button class="delete-team" onclick="deleteTeam('${teamName}')">❌</button>
+                        </td>
+                    ;
+                });
+            }
+
+            function deleteTeam(teamName) {
+                if (!confirm(Вы уверены, что хотите удалить "${teamName}" из чемпионата?)) return;
+
+                // Удаляем команду из списка
+                teams = teams.filter(team => team !== teamName);
+                
+                // Удаляем матчи с этой командой
+                schedule = schedule.map(round => 
+                    round.filter(match => match.home !== teamName && match.away !== teamName)
+                ).filter(round => round.length > 0);
+
+                // Удаляем Spotify ссылки
+                delete teamSpotifyLinks[teamName];
+
+                // Перегенерируем расписание с новым количеством команд
+                if (teams.length >= 2) {
+                    schedule = generateRoundRobinSchedule(teams);
+                } else {
+                    schedule = [];
+                }
+
+                currentTourIndex = 0;
+                renderCurrentTour();
+                calculateAndRenderStandings();
+                updateTourNavigation();
+                saveData();
+                
+                alert(Команда "${teamName}" удалена! Осталось команд: ${teams.length});
+            }
+
+            function jumpToFirstEmptyMatch() {
+                for (let roundIndex = 0; roundIndex < schedule.length; roundIndex++) {
+                    const round = schedule[roundIndex];
+                    for (let matchIndex = 0; matchIndex < round.length; matchIndex++) {
+                        const match = round[matchIndex];
+                        if (match.homeScore === null || match.awayScore === null) {
+                            currentTourIndex = roundIndex;
+                            renderCurrentTour();
+                            updateTourNavigation();
+                            switchToTab('schedule');
+                            return;
+                        }
+                    }
+                }
+                // Если все матчи заполнены, переходим к первому туру
+                currentTourIndex = 0;
+                renderCurrentTour();
+                updateTourNavigation();
+            }
+
+            function switchToTab(tabName) {
+                tabs.forEach(tab => tab.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+                
+                document.querySelector([data-tab="${tabName}"]).classList.add('active');
+                document.getElementById(${tabName}-tab).classList.add('active');
+            }
+
+            function goToPrevTour() {
+                if (currentTourIndex > 0) {
+                    currentTourIndex--;
+                    renderCurrentTour();
+                    updateTourNavigation();
+                }
+            }
+
+            function goToNextTour() {
+                if (currentTourIndex < schedule.length - 1) {
+                    currentTourIndex++;
+                    renderCurrentTour();
+                    updateTourNavigation();
+                }
+            }
+			function jumpToTour() {
+                const tourNum = parseInt(tourJumpInput.value);
+                if (!isNaN(tourNum) && tourNum >= 1 && tourNum <= schedule.length) {
+                    currentTourIndex = tourNum - 1;
+                    renderCurrentTour();
+                    updateTourNavigation();
+                    tourJumpInput.value = '';
+                } else {
+                    alert(Введите корректный номер тура от 1 до ${schedule.length}.);
+                }
+            }
+
+            function showFullSchedule() {
+                renderFullSchedule();
+                fullScheduleModal.style.display = 'block';
+            }
+
+            function renderFullSchedule() {
+                fullScheduleContent.innerHTML = '';
+                if (schedule.length === 0) {
+                    fullScheduleContent.innerHTML = '<p style="text-align: center;">Расписание не сгенерировано.</p>';
+                    return;
+                }
+
+                schedule.forEach((roundMatches, roundIndex) => {
+                    const tourDiv = document.createElement('div');
+                    tourDiv.classList.add('tour-full');
+                    tourDiv.innerHTML = <h4>Тур ${roundIndex + 1}</h4>;
+
+                    roundMatches.forEach(match => {
+                        const matchDiv = document.createElement('div');
+                        matchDiv.classList.add('match-full');
+                        const homeScoreDisplay = match.homeScore !== null ? match.homeScore : '?';
+                        const awayScoreDisplay = match.awayScore !== null ? match.awayScore : '?';
+                        matchDiv.textContent = ${match.home} ${homeScoreDisplay} : ${awayScoreDisplay} ${match.away};
+                        tourDiv.appendChild(matchDiv);
+                    });
+                    fullScheduleContent.appendChild(tourDiv);
+                });
+            }
+
+            function closeModal() {
+                fullScheduleModal.style.display = 'none';
+            }
+
+            function closeModalOnOutsideClick(event) {
+                if (event.target == fullScheduleModal) {
+                    fullScheduleModal.style.display = 'none';
+                }
+            }
+
+            function updateTourNavigation() {
+                totalToursNumSpan.textContent = schedule.length;
+                currentTourNumSpan.textContent = currentTourIndex + 1;
+
+                prevTourBtn.disabled = currentTourIndex === 0;
+                nextTourBtn.disabled = currentTourIndex === schedule.length - 1;
+
+                const hasSchedule = schedule.length > 0;
+                prevTourBtn.disabled = !hasSchedule || currentTourIndex === 0;
+                nextTourBtn.disabled = !hasSchedule || currentTourIndex === schedule.length - 1;
+                jumpToTourBtn.disabled = !hasSchedule;
+                showFullScheduleBtn.disabled = !hasSchedule;
+                tourJumpInput.disabled = !hasSchedule;
+                jumpToFirstEmptyBtn.disabled = !hasSchedule;
+            }
+
+            function resetAllData() {
+                if (confirm('Вы уверены, что хотите сбросить все данные? Это удалит команды, расписание и счета.')) {
+                    localStorage.clear();
+                    teams = [];
+                    schedule = [];
+                    currentTourIndex = 0;
+                    teamSpotifyLinks = {};
+                    teamsInput.value = '';
+                    currentTourOutput.innerHTML = '';
+                    standingsBody.innerHTML = '';
+                    updateTourNavigation();
+                    switchToTab('input');
+                    alert('Все данные сброшены.');
+                }
+            }
+
+            function saveData() {
+                localStorage.setItem('tournamentTeams', JSON.stringify(teams));
+                localStorage.setItem('tournamentSchedule', JSON.stringify(schedule));
+                localStorage.setItem('currentTourIndex', currentTourIndex);
+                localStorage.setItem('teamSpotifyLinks', JSON.stringify(teamSpotifyLinks));
+            }
+			function loadData() {
+                const savedTeams = localStorage.getItem('tournamentTeams');
+                const savedSchedule = localStorage.getItem('tournamentSchedule');
+                const savedTourIndex = localStorage.getItem('currentTourIndex');
+                const savedSpotifyLinks = localStorage.getItem('teamSpotifyLinks');
+
+                if (savedTeams) {
+                    teams = JSON.parse(savedTeams);
+                }
+                if (savedSchedule) {
+                    schedule = JSON.parse(savedSchedule);
+                }
+                if (savedTourIndex && schedule.length > 0) {
+                    currentTourIndex = parseInt(savedTourIndex);
+                    if (currentTourIndex >= schedule.length) {
+                        currentTourIndex = 0;
+                    }
+                }
+                if (savedSpotifyLinks) {
+                    teamSpotifyLinks = JSON.parse(savedSpotifyLinks);
+                }
+            }
+
+            // Делаем deleteTeam глобальной функцией для использования в onclick
+            window.deleteTeam = deleteTeam;
+        });
+    </script>
+</body>
+</html>
