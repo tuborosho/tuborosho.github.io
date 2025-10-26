@@ -1,115 +1,317 @@
-let teams = []; // Массив названий команд
-let schedule = []; // Массив туров, каждый тур - массив матчей
-let currentTourIndex = 0; // Индекс текущего отображаемого тура
-let standings = {}; // Объект для хранения статистики команд
-let currentMatchDataForSpotify = null; // Для хранения данных о матче, для которого добавляется Spotify ссылка
-
-// --- Константы ---
-const MAX_UNIQUE_DRAWS_PER_TOUR = 1; // Максимум 1:1 за тур
-const MAX_LARGE_WINS_PER_TOUR = 6; // Максимум 4:0 / 0:4 / 3:1 / 1:3 за тур
-const RELEGATION_ZONE_START = 121; // Начало зоны вылета
-const PLAYOFF_ZONE_START = 101; // Начало зоны стыков
-const STORAGE_KEY_TEAMS = 'tournamentTeams';
-const STORAGE_KEY_SCHEDULE = 'tournamentSchedule';
-const STORAGE_KEY_CURRENT_TOUR = 'tournamentCurrentTourIndex';
-
-// --- Элементы DOM ---
-const teamsInput = document.getElementById('teamsInput');
-const generateBtn = document.getElementById('generateBtn');
-const resetBtn = document.getElementById('resetBtn');
-const prevTourBtn = document.getElementById('prevTourBtn');
-const nextTourBtn = document.getElementById('nextTourBtn');
-const currentTourNumSpan = document.getElementById('currentTourNum');
-const totalToursNumSpan = document.getElementById('totalToursNum');
-const tourJumpInput = document.getElementById('tourJumpInput');
-const jumpToTourBtn = document.getElementById('jumpToTourBtn');
-const showFullScheduleBtn = document.getElementById('showFullScheduleBtn');
-const showStandingsBtn = document.getElementById('showStandingsBtn');
-const currentTourOutput = document.getElementById('currentTourOutput');
-const fullScheduleModal = document.getElementById('fullScheduleModal');
-const fullScheduleContent = document.getElementById('fullScheduleContent');
-const closeFullScheduleBtn = fullScheduleModal.querySelector('.close-button');
-const standingsModal = document.getElementById('standingsModal');
-const standingsBodyModal = document.getElementById('standingsBodyModal');
-const closeStandingsBtn = standingsModal.querySelector('.close-button');
-const spotifyModal = document.getElementById('spotifyModal');
-const spotifyUrlInput = document.getElementById('spotifyUrlInput');
-const saveSpotifyUrlBtn = document.getElementById('saveSpotifyUrlBtn');
-const currentSpotifyInfo = document.getElementById('currentSpotifyInfo');
-const closeSpotifyModalBtn = spotifyModal.querySelector('.close-button');
-
-// --- Функции для сохранения и загрузки данных ---
-function saveData() {
-    localStorage.setItem(STORAGE_KEY_TEAMS, JSON.stringify(teams));
-    localStorage.setItem(STORAGE_KEY_SCHEDULE, JSON.stringify(schedule));
-    localStorage.setItem(STORAGE_KEY_CURRENT_TOUR, currentTourIndex.toString());
+/* style.css */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #1a1a1a;
+    margin: 0;
+    padding: 20px;
+    color: #ffffff;
+    line-height: 1.6;
 }
 
-function loadData() {
-    const savedTeams = localStorage.getItem(STORAGE_KEY_TEAMS);
-    const savedSchedule = localStorage.getItem(STORAGE_KEY_SCHEDULE);
-    const savedCurrentTourIndex = localStorage.getItem(STORAGE_KEY_CURRENT_TOUR);
-
-    if (savedTeams) {
-        teams = JSON.parse(savedTeams);
-        teamsInput.value = teams.join('\n'); // Восстанавливаем текст в textarea
-    }
-    if (savedSchedule) {
-        schedule = JSON.parse(savedSchedule);
-    }
-    if (savedCurrentTourIndex) {
-        currentTourIndex = parseInt(savedCurrentTourIndex, 10);
-    } else {
-        currentTourIndex = 0; // По умолчанию первый тур
-    }
-
-    // Если данные загружены, обновляем интерфейс
-    if (teams.length > 0 && schedule.length > 0) {
-        updateStandings(); // Пересчитываем статистику на основе загруженного расписания
-        displayTour(currentTourIndex);
-        updateNavigationButtons();
-        displayFullSchedule();
-        updateStandingsDataAndDisplay();
-    } else {
-        // Если данных нет или они некорректны, показываем начальное состояние
-        currentTourOutput.innerHTML = '<p>Введите команды и нажмите "Сгенерировать Расписание".</p>';
-        currentTourNumSpan.textContent = '0';
-        totalToursNumSpan.textContent = '0';
-        updateNavigationButtons();
-    }
+.container {
+    background-color: #2a2a2a;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    max-width: 960px;
+    margin: 20px auto;
 }
 
-// --- Функции для работы с модальными окнами ---
-function openModal(modal) {
-    modal.style.display = 'block';
+h1, h2, h3 {
+    color: #ff9933;
+    text-align: center;
+    margin-bottom: 20px;
 }
 
-function closeModal(modal) {
-    modal.style.display = 'none';
-    currentMatchDataForSpotify = null; // Сбрасываем данные при закрытии
-    spotifyUrlInput.value = '';
-    currentSpotifyInfo.textContent = '';
+h2 {
+    margin-top: 30px;
 }
 
-// --- Функции для отрисовки и управления турами ---
-function displayTour(tourIndex) {
-    currentTourIndex = tourIndex;
-    if (currentTourNumSpan) currentTourNumSpan.textContent = tourIndex + 1;
-    if (totalToursNumSpan) totalToursNumSpan.textContent = schedule.length;
+button {
+    background-color: #ff9933;
+    color: #1a1a1a;
+    border: none;
+    padding: 10px 15px;
+    margin: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-weight: bold;
+}
 
-    currentTourOutput.innerHTML = ''; // Очищаем предыдущий тур
+button:hover {
+    background-color: #e68a00;
+}
 
-    if (tourIndex < 0 || tourIndex >= schedule.length) {
-        currentTourOutput.innerHTML = '<p>Тур не найден.</p>';
-        updateNavigationButtons();
-        return;
-    }
+button:disabled {
+    background-color: #666;
+    cursor: not-allowed;
+}
 
-    const matches = schedule[tourIndex];
-    const tourTitle = document.createElement('h3');
-    tourTitle.textContent = `Тур ${tourIndex + 1}`;
-    currentTourOutput.appendChild(tourTitle);
+.reset-button {
+    background-color: #cc0000;
+    color: white;
+}
 
+.reset-button:hover {
+    background-color: #a30000;
+}
+
+textarea, input[type="number"], input[type="text"] {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #555;
+    border-radius: 5px;
+    background-color: #333;
+    color: #eee;
+    box-sizing: border-box;
+}
+
+input[type="number"] {
+    width: 50px;
+    text-align: center;
+    padding: 5px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+th, td {
+    border: 1px solid #555;
+    padding: 10px;
+    text-align: center;
+}
+
+th {
+    background-color: #444;
+    color: #ff9933;
+    font-weight: bold;
+}
+
+td {
+    background-color: #3a3a3a;
+}
+
+.input-section, .schedule-control {
+    background-color: #333;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.4);
+}
+
+.input-section label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.input-section textarea {
+    min-height: 100px;
+}
+
+.input-section button, .schedule-control button {
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.schedule-control h2 {
+    margin-top: 0;
+}
+
+.tour-navigation {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.tour-navigation span {
+    margin: 0 5px;
+    font-weight: bold;
+}
+
+.tour-navigation input[type="number"] {
+    width: 70px;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.7);
+}
+
+.modal-content {
+    background-color: #2a2a2a;
+    margin: 5% auto;
+    padding: 25px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 700px;
+    border-radius: 8px;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+
+.close-button {
+    color: #aaa;
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #fff;
+    text-decoration: none;
+}
+
+.relegation-zone {
+    background-color: #8B0000 !important;
+    color: white !important;
+}
+
+.playoff-zone {
+    background-color: #FFD700 !important;
+    color: #1a1a1a !important;
+}
+
+/* Стили для Spotify ссылок */
+.spotify-link-home {
+    color: #1db954;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 18px;
+    margin: 0 5px;
+    transition: color 0.3s ease;
+    order: 1;
+}
+
+.spotify-link-away {
+    color: #1db954;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 18px;
+    margin: 0 5px;
+    transition: color 0.3s ease;
+    order: 4;
+}
+
+.spotify-links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 50px;
+}
+
+.schedule-section .matches-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 15px;
+}
+
+.schedule-section .match-item {
+    background-color: #3a3a3a;
+    padding: 15px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+.match-item .team-name {
+    flex-basis: 30%;
+    text-align: center;
+    font-weight: bold;
+    word-break: break-word;
+}
+
+.match-item .score-input {
+    flex-basis: 20%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.match-item .score-input input[type="number"] {
+    width: 45px;
+    padding: 5px;
+    margin: 0;
+    text-align: center;
+    background-color: #444;
+    border: 1px solid #666;
+}
+
+.match-item .score-input span {
+    font-size: 1.2em;
+}
+
+.remove-team-btn {
+    background-color: transparent;
+    border: none;
+    color: #ff6666;
+    font-size: 1.2em;
+    cursor: pointer;
+    margin-right: 5px;
+    padding: 0;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.remove-team-btn:hover {
+    transform: scale(1.2);
+    color: #ff3333;
+}
+
+#spotifyModal .modal-content p {
+    margin-bottom: 15px;
+    font-size: 0.95em;
+    color: #ccc;
+}
+
+#spotifyModal .modal-content h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+#spotifyModal #saveSpotifyUrlBtn {
+    width: 100%;
+    margin-top: 15px;
+}
+
+#showStandingsBtn {
+    background-color: #007bff;
+    color: white;
+}
+
+#showStandingsBtn:hover {
+    background-color: #0056b3;
+}
+
+.hidden {
+    display: none !important;
+}
     // Добавляем блок для сообщений о проверке тура
     const validationMessageDiv = document.createElement('div');
     validationMessageDiv.id = 'validationMessage';
@@ -801,3 +1003,4 @@ document.addEventListener('DOMContentLoaded', () => {
         updateNavigationButtons();
     }
 });
+
