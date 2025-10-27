@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Генератор Турниров Round Robin</title>
-    <!-- Сюда будет добавлена ссылка на внешний CSS файл -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -21,13 +20,17 @@
             <button id="resetBtn" class="reset-button">Сбросить все данные</button>
         </div>
 
-        <!-- Турнирная таблица (будет показана/скрыта) -->
+        <!-- Турнирная таблица вынесена сюда, как отдельный блок -->
         <div class="standings-section" id="standingsOutput">
             <h2>Турнирная Таблица</h2>
-            <table class="standings-table">
+            <div class="table-controls">
+                <button id="sortByNameBtn">Сортировать по имени</button>
+                <button id="sortByPointsBtn">Сортировать по очкам</button>
+            </div>
+            <table>
                 <thead>
                     <tr>
-                        <th>№</th>
+                        <th>#</th>
                         <th>Команда</th>
                         <th>И</th>
                         <th>В</th>
@@ -49,13 +52,13 @@
             <h2>Расписание матчей</h2>
             <div class="tour-navigation">
                 <button id="prevTourBtn" disabled>< Предыдущий тур</button>
-                <div style="display: flex; align-items: center;">
-                    <span>Тур <span id="currentTourNum">0</span> из <span id="totalToursNum">0</span></span>
-                    <span id="tourStatsMessage" class="tour-stats-message"></span>
-                </div>
+                <span class="tour-info">Тур <span id="currentTourNum">1</span> из <span id="totalToursNum">0</span></span>
                 <button id="nextTourBtn" disabled>Следующий тур ></button>
-                <input type="number" id="tourJumpInput" min="1" placeholder="№ тура">
-                <button id="jumpToTourBtn">Перейти</button>
+                <div class="tour-jump">
+                    <input type="number" id="tourJumpInput" min="1" placeholder="№ тура">
+                    <button id="jumpToTourBtn">Перейти</button>
+                </div>
+                <div id="tourStats" class="tour-stats"></div>
             </div>
             <button id="showFullScheduleBtn">Показать полное расписание</button>
         </div>
@@ -77,7 +80,6 @@
         </div>
     </div>
 
-    <!-- Сюда будет добавлена ссылка на внешний JS файл -->
     <script src="script.js"></script>
 </body>
 </html>
