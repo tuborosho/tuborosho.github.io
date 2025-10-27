@@ -1,368 +1,336 @@
-/* --- Общие стили и темная тема --- */
-:root {
-    --background-color: #121212; /* Темно-серый */
-    --text-color: #e0e0e0; /* Светло-серый текст */
-    --primary-color: #8bc34a; /* Салатовый */
-    --secondary-color: #00796b; /* Тёмно-бирюзовый */
-    --accent-color: #4caf50; /* Зеленый для акцентов */
-    --border-color: #424242; /* Серый для границ */
-    --modal-background: rgba(18, 18, 18, 0.95); /* Полупрозрачный темный фон модального окна */
-    --relegation-bg: rgba(255, 0, 0, 0.2); /* Полупрозрачный красный для зоны вылета */
-    --playoff-bg: rgba(255, 235, 59, 0.2); /* Полупрозрачный желтый для зоны стыков */
-}
-
+/* Темная тема */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: var(--background-color);
-    color: var(--text-color);
+    background-color: #121212; /* Черный фон */
+    color: #e0e0e0; /* Светлый текст */
     margin: 0;
     padding: 20px;
     line-height: 1.6;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start; /* Выравнивание по верхнему краю */
-    min-height: 100vh;
 }
 
 .container {
-    max-width: 1000px; /* Увеличил ширину для лучшего отображения */
-    width: 100%;
+    max-width: 960px; /* Немного шире для лучшего вида */
     margin: 20px auto;
-    background-color: #1e1e1e; /* Чуть светлее основной фон */
+    background-color: #1e1e1e; /* Темно-серый фон контейнера */
     padding: 30px;
     border-radius: 10px;
-    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
-    text-align: center;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5); /* Более выраженная тень */
 }
 
 h1, h2 {
-    color: var(--primary-color);
-    margin-bottom: 20px;
-    text-shadow: 0 0 5px rgba(139, 195, 74, 0.7);
+    text-align: center;
+    margin-bottom: 25px;
+    color: #8bc34a; /* Салатовый заголовок */
 }
 
-/* --- Секция ввода --- */
-.input-section {
+h1 {
+    font-size: 2.5rem;
     margin-bottom: 30px;
-    padding: 20px;
-    background-color: #2a2a2a;
+}
+
+h2 {
+    font-size: 1.8rem;
+}
+
+/* Секции ввода, таблицы, управления расписанием */
+.input-section, .standings-section, .schedule-control, .schedule-section {
+    margin-bottom: 30px;
+    padding: 25px;
+    background-color: #2c2c2c; /* Еще темнее фон секций */
     border-radius: 8px;
-    border: 1px solid var(--border-color);
+    border: 1px solid #3a3a3a; /* Граница секций */
 }
 
 .input-section label {
     display: block;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     font-weight: bold;
-    color: var(--primary-color);
+    color: #bdbdbd; /* Светло-серый */
 }
 
-#teamsInput {
-    width: calc(100% - 20px); /* Учет padding */
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid var(--border-color);
+.input-section textarea {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 18px;
+    border: 1px solid #4a4a4a; /* Граница поля ввода */
     border-radius: 5px;
-    background-color: #333;
-    color: var(--text-color);
+    box-sizing: border-box;
+    background-color: #3a3a3a; /* Темный фон textarea */
+    color: #e0e0e0; /* Светлый текст */
     font-size: 1rem;
-    resize: vertical; /* Разрешить вертикальное изменение размера */
 }
 
 button {
-    background-color: var(--primary-color);
-    color: #121212; /* Темный текст на кнопках */
+    background-color: #8bc34a; /* Салатовый */
+    color: #121212; /* Темный текст на кнопке */
+    padding: 12px 20px;
     border: none;
-    padding: 12px 25px;
-    margin: 5px;
     border-radius: 5px;
     cursor: pointer;
     font-size: 1rem;
-    font-weight: bold;
+    margin-right: 12px;
     transition: background-color 0.3s ease, transform 0.2s ease;
-    box-shadow: 0 2px 5px rgba(139, 195, 74, 0.3);
+    font-weight: 500;
 }
 
 button:hover {
-    background-color: #7cb342; /* Более темный оттенок салатового */
+    background-color: #6a9c3a; /* Темнее салатовый */
     transform: translateY(-2px);
 }
 
-button:active {
-    transform: translateY(0);
+button:disabled {
+    background-color: #4a4a4a; /* Серый для неактивных */
+    color: #888888;
+    cursor: not-allowed;
+    transform: none;
 }
 
 .reset-button {
     background-color: #f44336; /* Красный */
-    box-shadow: 0 2px 5px rgba(244, 67, 54, 0.3);
 }
 
 .reset-button:hover {
-    background-color: #d32f2f;
+    background-color: #d32f2f; /* Темнее красный */
 }
 
-/* --- Турнирная таблица --- */
+/* Стили для турнирной таблицы */
 .standings-section {
-    margin-top: 30px;
-    margin-bottom: 30px; /* Добавим нижний отступ */
-    padding: 20px;
-    background-color: #1e1e1e;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    overflow-x: auto; /* Для горизонтальной прокрутки на маленьких экранах */
+    overflow-x: auto; /* Горизонтальная прокрутка, если таблица слишком широкая */
 }
 
-.standings-section h2 {
-    margin-bottom: 15px;
-}
-
-.standings-table { /* Новый класс для таблицы, чтобы не путать с div */
+.standings-section table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 10px;
+    margin-top: 15px;
+    font-size: 0.95rem;
 }
 
-.standings-table th, .standings-table td {
-    padding: 10px 8px;
-    border: 1px solid var(--border-color);
+.standings-section th, .standings-section td {
+    border: 1px solid #3a3a3a; /* Границы ячеек */
+    padding: 12px;
     text-align: center;
 }
 
-.standings-table th {
-    background-color: var(--secondary-color);
-    color: #fff;
+.standings-section th {
+    background-color: #3a3a3a; /* Темный фон заголовков */
+    color: #ffffff;
     font-weight: bold;
-    text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
 }
 
-.standings-table tbody tr {
-    transition: background-color 0.3s ease;
+.standings-section tbody tr:nth-child(even) {
+    background-color: #272727; /* Чередование строк */
 }
 
-.standings-table tbody tr:nth-child(even) {
-    background-color: #2a2a2a; /* Цвет для четных строк */
+/* Выделение зон */
+.relegation-playoff {
+    background-color: rgba(255, 255, 0, 0.2) !important; /* Полупрозрачный желтый */
+}
+.relegation {
+    background-color: rgba(255, 0, 0, 0.2) !important; /* Полупрозрачный красный */
 }
 
-.standings-table tbody tr:hover {
-    background-color: #3a3a3a; /* Цвет при наведении */
-}
-
-/* Зоны */
-.relegation-zone {
-    background-color: var(--relegation-bg) !important; /* !important для переопределения */
-}
-
-.playoff-zone {
-    background-color: var(--playoff-bg) !important; /* !important для переопределения */
-}
-
-/* --- Управление расписанием --- */
-.schedule-control {
-    margin-bottom: 20px;
-    padding: 15px;
-    background-color: #1e1e1e;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.schedule-control h2 {
+/* Управление сортировкой */
+.table-controls {
+    text-align: center;
     margin-bottom: 15px;
+}
+.table-controls button {
+    background-color: #4a4a4a;
+    margin: 0 5px;
+}
+.table-controls button:hover {
+    background-color: #6a9c3a;
+}
+
+
+/* Стили для навигации по турам */
+.schedule-control {
+    text-align: center;
 }
 
 .tour-navigation {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap; /* Для адаптивности */
+    gap: 10px; /* Расстояние между элементами */
+}
+
+.tour-navigation .tour-info {
+    font-weight: bold;
+    margin: 0 15px;
+    white-space: nowrap;
+    color: #bdbdbd;
+}
+
+.tour-navigation .tour-jump {
     display: flex;
     align-items: center;
-    justify-content: center;
-    flex-wrap: wrap; /* Перенос на новую строку при необходимости */
-    gap: 10px; /* Пространство между элементами */
-    margin-bottom: 15px;
-    width: 100%;
-}
-
-.tour-navigation button {
-    background-color: var(--secondary-color);
-    box-shadow: 0 2px 5px rgba(0, 121, 107, 0.3);
-}
-
-.tour-navigation button:hover {
-    background-color: #00695c;
-}
-
-.tour-navigation span {
-    font-weight: bold;
-    font-size: 1.1rem;
-    margin: 0 10px; /* Отступы вокруг текста */
-    white-space: nowrap; /* Запретить перенос текста */
-}
-
-#currentTourNum, #totalToursNum {
-    color: var(--primary-color);
 }
 
 #tourJumpInput {
-    width: 60px;
-    padding: 10px;
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-    background-color: #333;
-    color: var(--text-color);
+    width: 70px;
+    padding: 8px;
+    border: 1px solid #4a4a4a;
+    border-radius: 4px;
     text-align: center;
-    font-size: 1rem;
-}
-
-#tourJumpInput::placeholder {
-    color: #888;
-}
-
-#showFullScheduleBtn {
-    background-color: var(--accent-color);
-    box-shadow: 0 2px 5px rgba(76, 175, 80, 0.3);
-}
-
-#showFullScheduleBtn:hover {
-    background-color: #388e3c;
-}
-
-/* --- Секция расписания текущего тура --- */
-.schedule-section {
-    margin-top: 20px;
-    padding: 20px;
-    background-color: #1e1e1e;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-}
-
-.schedule-section h2 {
-    margin-bottom: 15px;
-}
-
-.match {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 15px 10px;
-    margin-bottom: 10px;
-    background-color: #2a2a2a;
-    border-radius: 5px;
-    border: 1px solid var(--border-color);
-    flex-wrap: wrap; /* Перенос на новую строку, если не помещается */
-    gap: 5px; /* Пространство между элементами */
-}
-
-.match-info {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    flex-grow: 1; /* Занимать доступное пространство */
-    min-width: 250px; /* Минимальная ширина, чтобы элементы не сжимались слишком сильно */
-    justify-content: center; /* Центрируем блок с информацией о матче */
-}
-
-.team-spotify-link {
-    display: inline-block;
-    width: 25px;
-    height: 25px;
-    background-color: var(--accent-color);
-    color: #121212;
-    border-radius: 50%;
-    text-decoration: none;
-    font-size: 0.8rem;
-    line-height: 25px;
-    text-align: center;
-    transition: background-color 0.3s ease;
-}
-
-.team-spotify-link:hover {
-    background-color: #388e3c;
-}
-.team-spotify-link.left {
-    margin-right: 10px;
-}
-.team-spotify-link.right {
+    background-color: #3a3a3a;
+    color: #e0e0e0;
     margin-left: 10px;
 }
 
-.team-name {
-    font-weight: bold;
-    color: var(--primary-color);
-    white-space: nowrap; /* Запретить перенос имени команды */
-    overflow: hidden; /* Скрыть, если не помещается */
-    text-overflow: ellipsis; /* Добавить многоточие */
-    max-width: 150px; /* Ограничить ширину имени команды */
+/* Стиль для сообщений статистики */
+.tour-stats {
+    font-size: 0.85rem;
+    color: #ffc107; /* Желтоватый цвет для предупреждений */
+    margin-left: 15px;
+    min-width: 150px; /* Чтобы избежать прыжков верстки */
+}
+.tour-stats.error {
+    color: #f44336; /* Красный для критических ошибок */
 }
 
-.score-input-container {
+/* Расписание матчей */
+.schedule-section table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.schedule-section th, .schedule-section td {
+    border: 1px solid #3a3a3a;
+    padding: 10px;
+    text-align: center;
+}
+
+.schedule-section th {
+    background-color: #3a3a3a;
+    color: white;
+}
+
+.schedule-section input[type="number"] {
+    width: 60px;
+    padding: 6px;
+    text-align: center;
+    border: 1px solid #4a4a4a;
+    border-radius: 4px;
+    background-color: #3a3a3a;
+    color: #e0e0e0;
+    margin: 0 5px;
+}
+/* Стили для Spotify ссылок */
+.match-teams {
     display: flex;
     align-items: center;
-    gap: 5px;
-    margin: 0 10px; /* Отступы между командами */
-}
-
-.score-input {
-    width: 40px;
-    padding: 8px;
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    background-color: #333;
-    color: var(--text-color);
+    justify-content: center;
+    flex-wrap: nowrap; /* Предотвращаем перенос */
     text-align: center;
-    font-size: 1rem;
+    width: 250px; /* Фиксированная ширина для блока команд + Spotify */
 }
 
-.score-input::placeholder {
-    color: #888;
+.spotify-link-input {
+    width: 100px; /* Ширина поля ввода URL */
+    padding: 5px;
+    border: 1px solid #4a4a4a;
+    border-radius: 4px;
+    background-color: #3a3a3a;
+    color: #e0e0e0;
+    margin: 0 8px;
+    font-size: 0.8rem;
+    box-sizing: border-box;
+}
+.spotify-link-input::placeholder {
+    color: #666;
 }
 
-/* --- Сообщение о статистике --- */
-.tour-stats-message {
-    font-size: 0.85rem;
-    color: #ffcc00; /* Желтый для сообщений */
-    margin-left: 15px;
-    text-align: left; /* Выравнивание текста */
-    flex-basis: 100%; /* Занимает всю ширину, если перенос */
-    margin-top: 5px; /* Отступ сверху, если на новой строке */
+.match-teams .team-name {
+    flex-grow: 1; /* Позволяет имени команды занять доступное пространство */
+    max-width: 120px; /* Ограничиваем ширину имени */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-/* --- Модальное окно --- */
+
+/* Стили для модального окна */
 .modal {
-    display: none; /* По умолчанию скрыто */
-    position: fixed; /* Фиксированное положение */
-    z-index: 1000; /* Поверх всего */
+    display: none;
+    position: fixed;
+    z-index: 1000;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    overflow: auto; /* Разрешить прокрутку, если контент большой */
-    background-color: var(--modal-background); /* Полупрозрачный фон */
-    backdrop-filter: blur(5px); /* Размытие фона */
+    overflow: auto;
+    background-color: rgba(0,0,0,0.7);
+    padding-top: 50px;
 }
 
 .modal-content {
-    background-color: #1e1e1e; /* Фон содержимого модального окна */
-    margin: 5% auto; /* 5% сверху/снизу, авто по бокам */
+    background-color: #1e1e1e;
+    margin: 5% auto;
     padding: 30px;
-    border: 1px solid var(--border-color);
+    border: 1px solid #4a4a4a;
+    width: 85%;
+    max-width: 750px;
     border-radius: 10px;
-    width: 80%; /* Ширина модального окна */
-    max-width: 900px; /* Максимальная ширина */
-    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.6);
-    position: relative; /* Для кнопки закрытия */
-    text-align: center;
+    position: relative;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
 }
 
 .modal-content h2 {
     margin-top: 0;
+    color: #8bc34a;
+}
+
+.modal-content #fullScheduleContent {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.modal-content #fullScheduleContent .tour-block {
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px dashed #3a3a3a;
+}
+.modal-content #fullScheduleContent .tour-block:last-child {
+    border-bottom: none;
+}
+
+.modal-content #fullScheduleContent h3 {
+    color: #8bc34a;
+    margin-bottom: 12px;
+    font-size: 1.4rem;
+    border-bottom: 2px solid #3a3a3a;
+    padding-bottom: 5px;
+}
+
+.modal-content #fullScheduleContent .match {
+    margin-bottom: 10px;
+    font-size: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+.modal-content #fullScheduleContent .match .match-teams {
+    flex-basis: 100%; /* Размещаем команды на новой строке */
+    order: 1; /* Порядок отображения */
+    margin-bottom: 5px;
+}
+.modal-content #fullScheduleContent .match .score-inputs {
+    order: 2; /* Порядок отображения */
 }
 
 .close-button {
     color: #aaa;
     position: absolute;
     top: 15px;
-    right: 15px;
-    font-size: 28px;
+    right: 20px;
+    font-size: 32px;
     font-weight: bold;
     cursor: pointer;
     transition: color 0.3s ease;
@@ -370,91 +338,58 @@ button:active {
 
 .close-button:hover,
 .close-button:focus {
-    color: var(--primary-color);
+    color: #8bc34a;
     text-decoration: none;
 }
 
-#fullScheduleContent {
-    max-height: 70vh; /* Ограничение высоты, чтобы контент прокручивался */
-    overflow-y: auto;
-    text-align: left; /* Выравнивание содержимого по левому краю */
-    padding-right: 15px; /* Отступ для скроллбара */
-}
-
-#fullScheduleContent .tour-section {
-    margin-bottom: 30px;
-    padding-bottom: 15px;
-    border-bottom: 1px dashed var(--border-color);
-}
-
-#fullScheduleContent .tour-section:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-}
-
-#fullScheduleContent h3 {
-    color: var(--primary-color);
-    margin-bottom: 10px;
-    border-bottom: 2px solid var(--secondary-color);
-    padding-bottom: 5px;
-}
-
-#fullScheduleContent .match-full { /* Стиль для матчей в полном расписании */
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 0;
-    font-size: 0.95rem;
-}
-
-#fullScheduleContent .match-full .team-name {
-    max-width: 150px; /* Ограничение ширины */
-}
-
-#fullScheduleContent .match-full .score {
-    font-weight: bold;
-    margin: 0 10px;
-    color: var(--primary-color);
-}
-
-#fullScheduleContent .match-full .spotify-placeholder { /* Placeholder для Spotify ссылок */
-    width: 25px;
-    height: 25px;
-    background-color: var(--secondary-color);
-    border-radius: 50%;
-    display: inline-block;
-}
-
-/* --- Адаптивность --- */
+/* Дополнительные стили для отзывчивости */
 @media (max-width: 768px) {
     .container {
         padding: 20px;
     }
     .tour-navigation {
         flex-direction: column;
-        gap: 10px;
+        align-items: center;
+        gap: 8px;
     }
-    .tour-navigation button, .tour-navigation input {
-        width: 100%; /* Кнопки и инпуты занимают всю ширину */
-        box-sizing: border-box; /* Учет padding/border */
-    }
-    .match-info {
-        flex-basis: 100%; /* Матч занимает всю ширину */
-        justify-content: center;
-        margin-bottom: 10px; /* Добавить отступ между матчами */
-    }
-    .score-input-container {
+    .tour-navigation .tour-info {
         margin: 5px 0;
     }
-    .team-name {
-        max-width: 120px; /* Уменьшить ширину для мобильных */
+    .tour-jump {
+        margin-top: 10px;
     }
     .modal-content {
-        width: 90%;
+        width: 95%;
         margin: 20px auto;
+        padding: 25px;
     }
-    .standings-table th, .standings-table td {
-        padding: 8px 5px;
+    .standings-section table {
+        font-size: 0.85rem;
+    }
+    .schedule-section input[type="number"], .spotify-link-input {
+        width: 50px;
         font-size: 0.9rem;
+    }
+    .match-teams .team-name {
+        max-width: 120px;
+    }
+    .match-teams {
+        width: 100%; /* Занимает всю ширину на малых экранах */
+        flex-wrap: wrap; /* Разрешаем перенос */
+        justify-content: center;
+    }
+    .spotify-link-input {
+        margin: 5px 0; /* Отступ сверху/снизу */
+        order: 1; /* Помещаем Spotify после названия команды */
+    }
+    .match-teams .team-name {
+        order: 0; /* Название команды идет первым */
+        margin-bottom: 5px;
+    }
+    .schedule-section td:nth-child(2), /* Команда 1 */
+    .schedule-section td:nth-child(4) { /* Команда 2 */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 }
