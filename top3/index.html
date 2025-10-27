@@ -3,99 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Генератор Турниров Round Robin</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Турнирная Таблица</title>
+    <link rel="stylesheet" href="style.css"> <!-- Ссылка на CSS -->
 </head>
 <body>
+
     <div class="container">
-        <h1>Генератор Турниров Round Robin</h1>
+        <h1>Турнир по Песням/Командам</h1>
 
+        <!-- Секция Управления Командами -->
+        <div class="team-management-section">
+            <h3>Управление Командами</h3>
+            <ul id="teamList" class="team-list">
+                <!-- Список команд будет сгенерирован JS -->
+                <li>
+                    <div class="team-info">
+                        <span class="team-name-display">Пример Команды 1</span>
+                        <button class="remove-team-btn">❌</button>
+                    </div>
+                </li>
+                 <li>
+                    <div class="team-info">
+                        <span class="team-name-display">Пример Команды 2</span>
+                        <button class="remove-team-btn">❌</button>
+                    </div>
+                </li>
+            </ul>
+            <div class="team-input-group">
+                <input type="text" id="addTeamInput" placeholder="Введите новую команду/песню">
+                <button id="addTeamBtn">Добавить Команду</button>
+            </div>
+        </div>
+
+        <!-- Секция Ввода -->
         <div class="input-section">
-            <label for="teamsInput">Введите названия команд (каждая с новой строки):</label>
-            <textarea id="teamsInput" rows="10" placeholder="Команда А
-Команда Б
-Команда В
-Команда Г"></textarea>
-            <div class="button-group">
-                <button id="generateBtn">Сгенерировать Расписание</button>
-                <button id="resetBtn" class="reset-button">Сбросить все данные</button>
-            </div>
+            <h3>Настройки Турнира</h3>
+            <label for="teamsInput">Введите команды через запятую (если не используется управление командами):</label>
+            <textarea id="teamsInput" placeholder="Например: Команда A, Команда B, Команда C..."></textarea>
+            <button id="generateBtn">Сгенерировать Расписание</button>
+            <button id="resetBtn" class="reset-button">Сбросить Все Данные</button>
         </div>
 
-        <!-- Секция для управления турами -->
+        <!-- Секция Управления Расписанием (Навигация по турам) -->
         <div class="schedule-control">
-            <h2>Управление турами</h2>
             <div class="tour-navigation">
-                <button id="prevTourBtn" disabled>< Предыдущий тур</button>
-                <span class="tour-info">Тур <span id="currentTourNum">1</span> из <span id="totalToursNum">0</span></span>
-                <button id="nextTourBtn" disabled>Следующий тур ></button>
-                <div class="tour-jump">
-                    <input type="number" id="tourJumpInput" min="1" placeholder="№ тура">
-                    <button id="jumpToTourBtn">Перейти</button>
+                <button id="prevTourBtn">&lt; Предыдущий Тур</button>
+                <span id="currentTourDisplay">Тур: 1</span>
+                <input type="number" id="currentTourInput" min="1" value="1">
+                <button id="nextTourBtn">Следующий Тур &gt;</button>
+            </div>
+            <p><em>(Навигация по турам предназначена только для просмотра расписания)</em></p>
+        </div>
+
+        <!-- Секция Расписания -->
+        <div class="schedule-section">
+            <h2>Расписание Матчей</h2>
+            <div id="scheduleContainer">
+                <!-- Матчи будут сгенерированы JS -->
+                <div class="tour-display">
+                    <h3>Тур 1</h3>
+                    <div class="tour-stats-warning" style="display: none;">✅️ ✅️</div> <!-- Пример уведомления -->
+                    <div class="match">
+                        <a href="#" class="spotify-link">🎵</a>
+                        <span class="team-name">Команда А</span>
+                        <!-- Поля для ввода счета или тех. поражение -->
+                        <input type="number" class="score-input" data-tour-index="0" data-match-index="0" data-team="1"> : <input type="number" class="score-input" data-tour-index="0" data-match-index="0" data-team="2">
+                        <span class="team-name">Команда Б</span>
+                        <a href="#" class="spotify-link">🎵</a>
+                    </div>
+                    <div class="match">
+                        <a href="#" class="spotify-link">🎵</a>
+                        <span class="team-name">Команда С</span>
+                        <span class="technical-loss">0:3</span> <!-- Пример тех. поражения -->
+                        <span class="team-name">Команда Д</span>
+                        <a href="#" class="spotify-link">🎵</a>
+                    </div>
+                    <!-- Другие матчи тура -->
                 </div>
-            </div>
-            <div class="button-group">
-                <button id="showFullScheduleBtn">Показать полное расписание</button>
-                <button id="showStandingsBtn">Показать турнирную таблицу</button>
+                <!-- Другие туры -->
             </div>
         </div>
 
-        <!-- Секция для отображения текущего тура -->
-        <div class="schedule-section" id="currentTourOutput">
-            <p>Введите команды и нажмите "Сгенерировать Расписание".</p>
-        </div>
-
-    </div> <!-- конец .container -->
-
-    <!-- Модальное окно для полного расписания -->
-    <div id="fullScheduleModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
-            <h2>Полное расписание</h2>
-            <div id="fullScheduleContent">
-                <!-- Здесь будет выводиться полное расписание -->
-            </div>
-        </div>
-    </div>
-
-    <!-- Модальное окно для турнирной таблицы -->
-    <div id="standingsModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button">&times;</span>
+        <!-- Секция Турнирной Таблицы -->
+        <div class="standings-section">
             <h2>Турнирная Таблица</h2>
             <table>
                 <thead>
                     <tr>
-                        <th>#</th> <!-- Номер по порядку -->
+                        <th>#</th>
                         <th>Команда</th>
-                        <th>И</th>
-                        <th>В</th>
-                        <th>Н</th>
-                        <th>П</th>
-                        <th>ЗГ</th>
-                        <th>ПГ</th>
-                        <th>РМ</th>
-                        <th>Очки</th>
+                        <th>И</th> <!-- Игры -->
+                        <th>В</th> <!-- Победы -->
+                        <th>Н</th> <!-- Ничьи -->
+                        <th>П</th> <!-- Поражения -->
+                        <th>ГЗ</th> <!-- Голов Забито -->
+                        <th>ГП</th> <!-- Голов Пропущено -->
+                        <th>РМ</th> <!-- Разница Мячей -->
+                        <th>О</th> <!-- Очки -->
                     </tr>
                 </thead>
-                <tbody id="standingsBodyModal">
-                    <!-- Здесь будет выводиться турнирная таблица -->
+                <tbody id="standingsTableBody">
+                    <!-- Строки таблицы будут сгенерированы JS -->
+                     <!-- Пример строки (будет заменен JS) -->
+                    <tr>
+                        <td>1</td>
+                        <td>Команда A</td>
+                        <td>10</td>
+                        <td>8</td>
+                        <td>1</td>
+                        <td>1</td>
+                        <td>25</td>
+                        <td>10</td>
+                        <td>+15</td>
+                        <td>25</td>
+                    </tr>
+                    <tr>
+                        <td>101</td>
+                        <td>Команда X (Стыки)</td>
+                        <td>...</td>
+                        <td>...</td>
+                        <td>...</td>
+                        <td>...</td>
+                        <td>...</td>
+                        <td>...</td>
+                        <td>...</td>
+                        <td>...</td>
+                    </tr>
+                     <tr>
+                        <td>121</td>
+                        <td>Команда Y (Вылет)</td>
+                        <td>...</td>
+                        <td>...</td>
+                        <td>...</td>
+                        <td>...</td>
+                        <td>...</td>
+                        <td>...</td>
+                        <td>...</td>
+                        <td>...</td>
+                    </tr>
+                    <!-- До 150 строк -->
                 </tbody>
             </table>
         </div>
-    </div>
 
-    <!-- Модальное окно для ввода Spotify ссылки -->
-    <div id="spotifyModal" class="modal">
+    </div> <!-- /.container -->
+
+    <!-- Модальные окна (если понадобятся) -->
+    <!-- <div id="myModal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
-            <h2>Добавить ссылку на песню</h2>
-            <p id="currentSpotifyInfo">Введите ссылку для команды:</p>
-            <input type="text" id="spotifyUrlInput" placeholder="https://open.spotify.com/track/...">
-            <button id="saveSpotifyUrlBtn">Сохранить</button>
+            <h3 id="modalTitle"></h3>
+            <p id="modalBody"></p>
         </div>
-    </div>
+    </div> -->
 
-    <script src="script.js"></script>
+    <script src="script.js"></script> <!-- Подключение JS -->
 </body>
 </html>
