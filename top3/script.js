@@ -1,756 +1,885 @@
-// --- Глобальные переменные ---
-let teams = [];
-let schedule = [];
-let currentTourIndex = 0;
-let standings = {};
-let currentMatchDataForSpotify = null;
-
-// --- Константы ---
-const MAX_UNIQUE_DRAWS_PER_TOUR = 1;
-const MAX_LARGE_WINS_PER_TOUR = 6;
-const RELEGATION_ZONE_START = 121;
-const PLAYOFF_ZONE_START = 101;
-const STORAGE_KEY_TEAMS = 'tournamentTeams';
-const STORAGE_KEY_SCHEDULE = 'tournamentSchedule';
-const STORAGE_KEY_CURRENT_TOUR = 'tournamentCurrentTourIndex';
-
-// --- Элементы DOM ---
-const teamsInput = document.getElementById('teamsInput');
-const generateBtn = document.getElementById('generateBtn');
-const resetBtn = document.getElementById('resetBtn');
-const prevTourBtn = document.getElementById('prevTourBtn');
-const nextTourBtn = document.getElementById('nextTourBtn');
-const currentTourNumSpan = document.getElementById('currentTourNum');
-const totalToursNumSpan = document.getElementById('totalToursNum');
-const tourJumpInput = document.getElementById('tourJumpInput');
-const jumpToTourBtn = document.getElementById('jumpToTourBtn');
-const showFullScheduleBtn = document.getElementById('showFullScheduleBtn');
-const showStandingsBtn = document.getElementById('showStandingsBtn');
-const currentTourOutput = document.getElementById('currentTourOutput');
-const fullScheduleModal = document.getElementById('fullScheduleModal');
-const fullScheduleContent = document.getElementById('fullScheduleContent');
-const closeFullScheduleBtn = fullScheduleModal.querySelector('.close-button');
-const standingsModal = document.getElementById('standingsModal');
-const standingsBodyModal = document.getElementById('standingsBodyModal');
-const closeStandingsBtn = standingsModal.querySelector('.close-button');
-const spotifyModal = document.getElementById('spotifyModal');
-const spotifyUrlInput = document.getElementById('spotifyUrlInput');
-const saveSpotifyUrlBtn = document.getElementById('saveSpotifyUrlBtn');
-const currentSpotifyInfo = document.getElementById('currentSpotifyInfo');
-const closeSpotifyModalBtn = spotifyModal.querySelector('.close-button');
-
-// --- Функции для сохранения и загрузки данных ---
-function saveData() {
-    localStorage.setItem(STORAGE_KEY_TEAMS, JSON.stringify(teams));
-    localStorage.setItem(STORAGE_KEY_SCHEDULE, JSON.stringify(schedule));
-    localStorage.setItem(STORAGE_KEY_CURRENT_TOUR, currentTourIndex.toString());
-}
-
-function loadData() {
-    const savedTeams = localStorage.getItem(STORAGE_KEY_TEAMS);
-    const savedSchedule = localStorage.getItem(STORAGE_KEY_SCHEDULE);
-    const savedCurrentTourIndex = localStorage.getItem(STORAGE_KEY_CURRENT_TOUR);
-
-    if (savedTeams) {
-        teams = JSON.parse(savedTeams);
-        teamsInput.value = teams.join('\n');
-    }
-    if (savedSchedule) {
-        schedule = JSON.parse(savedSchedule);
-    }
-    if (savedCurrentTourIndex) {
-        currentTourIndex = parseInt(savedCurrentTourIndex, 10);
-    } else {
-        currentTourIndex = 0;
-    }
-
-    if (teams.length > 0 && schedule.length > 0) {
-        updateStandings();
-        displayTour(currentTourIndex);
-        updateNavigationButtons();
-        displayFullSchedule();
-        updateStandingsDataAndDisplay();
-    } else {
-        currentTourOutput.innerHTML = '<p>Введите команды и нажмите "Сгенерировать Расписание".</p>';
-        currentTourNumSpan.textContent = '0';
-        totalToursNumSpan.textContent = '0';
-        updateNavigationButtons();
-    }
-}
-
-// --- Функции для работы с модальными окнами ---
-function openModal(modal) {
-    modal.style.display = 'block';
-}
-
-function closeModal(modal) {
-    modal.style.display = 'none';
-    currentMatchDataForSpotify = null;
-    spotifyUrlInput.value = '';
-    currentSpotifyInfo.textContent = '';
-}
-
-// --- Функции для отрисовки и управления турами ---
-function displayTour(tourIndex) {
-    currentTourIndex = tourIndex;
-    if (currentTourNumSpan) currentTourNumSpan.textContent = tourIndex + 1;
-    if (totalToursNumSpan) totalToursNumSpan.textContent = schedule.length;
-
-    currentTourOutput.innerHTML = '';
-
-    if (tourIndex < 0 || tourIndex >= schedule.length) {
-        currentTourOutput.innerHTML = '<p>Тур не найден.</p>';
-        updateNavigationButtons();
-        return;
-    }
-
-    const matches = schedule[tourIndex];
-    const tourTitle = document.createElement('h3');
-    tourTitle.textContent = `Тур ${tourIndex + 1}`;
-    currentTourOutput.appendChild(tourTitle);
-
-    const validationMessageDiv = document.createElement('div');
-    validationMessageDiv.id = 'validationMessage';
-    validationMessageDiv.style.color = 'orange';
-    validationMessageDiv.style.marginBottom = '10px';
-    validationMessageDiv.style.textAlign = 'center';
-    currentTourOutput.appendChild(validationMessageDiv);
-
-    const tourMatchesDiv = document.createElement('div');
-    tourMatchesDiv.className = 'matches-list';
-
-    if (matches.length === 0) {
-        tourMatchesDiv.innerHTML = '<p>Матчей в этом туре нет.</p>';
-    } else {
-        matches.forEach((match, matchIndex) => {
-            const matchElement = document.createElement('div');
-            matchElement.className = 'match-item';
-
-            const removeHomeTeamBtn = document.createElement('button');
-            removeHomeTeamBtn.className = 'remove-team-btn';
-            removeHomeTeamBtn.innerHTML = '❌️';
-            removeHomeTeamBtn.title = `Удалить команду ${match.homeTeam}`;
-            removeHomeTeamBtn.onclick = (e) => {
-                e.preventDefault();
-                removeTeam(match.homeTeam);
-            };
-
-            const removeAwayTeamBtn = document.createElement('button');
-            removeAwayTeamBtn.className = 'remove-team-btn';
-            removeAwayTeamBtn.innerHTML = '❌️';
-            removeAwayTeamBtn.title = `Удалить команду ${match.awayTeam}`;
-            removeAwayTeamBtn.onclick = (e) => {
-                e.preventDefault();
-                removeTeam(match.awayTeam);
-            };
-
-            matchElement.innerHTML = `
-                <a href="#" class="spotify-link-home" data-tour-index="${tourIndex}" data-match-index="${matchIndex}" data-team="home" title="Добавить песню">🎶</a>
-                <span class="team-name">${match.homeTeam}</span>
-                <div class="score-input">
-                    <input type="number" class="score-home" min="0" max="10" value="${match.homeScore || ''}" data-tour-index="${tourIndex}" data-match-index="${matchIndex}" data-team="home" placeholder="-">
-                    <span>:</span>
-                    <input type="number" class="score-away" min="0" max="10" value="${match.awayScore || ''}" data-tour-index="${tourIndex}" data-match-index="${matchIndex}" data-team="away" placeholder="-">
-                </div>
-                <span class="team-name">${match.awayTeam}</span>
-                <a href="#" class="spotify-link-away" data-tour-index="${tourIndex}" data-match-index="${matchIndex}" data-team="away" title="Добавить песню">🎶</a>
-            `;
-
-            matchElement.prepend(removeHomeTeamBtn);
-            matchElement.querySelector('.team-name:last-of-type').parentNode.insertBefore(removeAwayTeamBtn, matchElement.querySelector('.team-name:last-of-type').nextSibling);
-
-            tourMatchesDiv.appendChild(matchElement);
-        });
-    }
-    currentTourOutput.appendChild(tourMatchesDiv);
-
-    addScoreInputListeners();
-    validateTourResults(matches);
-    updateNavigationButtons();
-}
-
-function updateNavigationButtons() {
-    prevTourBtn.disabled = currentTourIndex === 0;
-    nextTourBtn.disabled = currentTourIndex === schedule.length - 1 || schedule.length === 0;
-}
-
-function findFirstUnscoredMatchTour() {
-    if (schedule.length === 0) return 0;
-    for (let i = 0; i < schedule.length; i++) {
-        const tour = schedule[i];
-        if (tour.some(match => !match.score || match.score === "")) {
-            return i;
-        }
-    }
-    return 0;
-}
-
-// --- Функции для генерации расписания ---
-function generateSchedule() {
-    schedule = [];
-    const numTeams = teams.length;
-    const numRounds = numTeams - 1;
-    const numMatchesPerRound = Math.floor(numTeams / 2);
-
-    let currentTeams = [...teams];
-
-    for (let round = 0; round < numRounds; round++) {
-        const currentRoundMatches = [];
-        for (let i = 0; i < numMatchesPerRound; i++) {
-            const homeTeam = currentTeams[i];
-            const awayTeam = currentTeams[numTeams - 1 - i];
-            currentRoundMatches.push({
-                homeTeam: homeTeam,
-                awayTeam: awayTeam,
-                score: "",
-                homeSpotifyUrl: "",
-                awaySpotifyUrl: ""
-            });
-        }
-        schedule.push(currentRoundMatches);
-
-        const firstTeam = currentTeams[0];
-        const rotatingTeams = currentTeams.slice(1);
-        const lastTeam = rotatingTeams.pop();
-        currentTeams = [firstTeam, lastTeam, ...rotatingTeams];
-    }
-}
-
-// --- Функции для обновления статистики и турнирной таблицы ---
-function updateStandings() {
-    teams.forEach(team => {
-        standings[team] = { played: 0, wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, points: 0 };
-    });
-
-    schedule.forEach(tour => {
-        tour.forEach(match => {
-            if (match.score && match.score !== "") {
-                const scores = match.score.split(':').map(Number);
-                if (scores.length === 2) {
-                    const homeScore = scores[0];
-                    const awayScore = scores[1];
-                    const homeTeam = match.homeTeam;
-                    const awayTeam = match.awayTeam;
-
-                    standings[homeTeam].played++;
-                    standings[homeTeam].goalsFor += homeScore;
-                    standings[homeTeam].goalsAgainst += awayScore;
-                    if (homeScore > awayScore) {
-                        standings[homeTeam].wins++;
-                        standings[homeTeam].points += 3;
-                    } else if (homeScore === awayScore) {
-                        standings[homeTeam].draws++;
-                        standings[homeTeam].points += 1;
-                    } else {
-                        standings[homeTeam].losses++;
-                    }
-
-                    standings[awayTeam].played++;
-                    standings[awayTeam].goalsFor += awayScore;
-                    standings[awayTeam].goalsAgainst += homeScore;
-                    if (awayScore > homeScore) {
-                        standings[awayTeam].wins++;
-                        standings[awayTeam].points += 3;
-                    } else if (awayScore === homeScore) {
-                        standings[awayTeam].draws++;
-                        standings[awayTeam].points += 1;
-                    } else {
-                        standings[awayTeam].losses++;
-                    }
-                }
-            }
-        });
-    });
-
-    if (schedule[currentTourIndex]) {
-        validateTourResults(schedule[currentTourIndex]);
-    }
-}
-
-function displayStandingsInModal() {
-    standingsBodyModal.innerHTML = '';
-
-    const sortedStandings = Object.entries(standings).sort(([teamA_name, teamA_data], [teamB_name, teamB_data]) => {
-        if (teamB_data.points !== teamA_data.points) return teamB_data.points - teamA_data.points;
-        const diffA = teamA_data.goalsFor - teamA_data.goalsAgainst;
-        const diffB = teamB_data.goalsFor - teamB_data.goalsAgainst;
-        if (diffB !== diffA) {
-            return diffB - diffA;
-        }
-        return teamB_data.goalsFor - teamA_data.goalsFor;
-    });
-
-    sortedStandings.forEach(([teamName, data], index) => {
-        const row = standingsBodyModal.insertRow();
-        const position = index + 1;
-
-        row.innerHTML = `
-            <td>${position}</td>
-            <td>${teamName}</td>
-            <td>${data.played}</td>
-            <td>${data.wins}</td>
-            <td>${data.draws}</td>
-            <td>${data.losses}</td>
-            <td>${data.goalsFor}</td>
-            <td>${data.goalsAgainst}</td>
-            <td>${data.goalsFor - data.goalsAgainst}</td>
-            <td>${data.points}</td>
-        `;
-
-        if (position >= RELEGATION_ZONE_START && position <= RELEGATION_ZONE_START + 29) {
-            row.classList.add('relegation-zone');
-        } else if (position >= PLAYOFF_ZONE_START && position <= PLAYOFF_ZONE_START + 19) {
-            row.classList.add('playoff-zone');
-        }
-    });
-}
-
-function updateStandingsDataAndDisplay() {
-    updateStandings();
-    displayStandingsInModal();
-}
-
-// --- Функции для валидации результатов тура ---
-function validateTourResults(tourMatches) {
-    let drawCount1_1 = 0;
-    let largeWinCount = 0;
-
-    tourMatches.forEach(match => {
-        if (match.score && match.score !== "") {
-            const scores = match.score.split(':').map(Number);
-            if (scores.length === 2) {
-                const score1 = scores[0];
-                const score2 = scores[1];
-
-                if (score1 === 1 && score2 === 1) {
-                    drawCount1_1++;
-                } else if (
-                    (score1 === 4 && score2 === 0) || (score1 === 0 && score2 === 4) ||
-                    (score1 === 3 && score2 === 1) || (score1 === 1 && score2 === 3)
-                ) {
-                    largeWinCount++;
-                }
-            }
-        }
-    });
-
-    let validationMessage = "";
-    if (drawCount1_1 > MAX_UNIQUE_DRAWS_PER_TOUR) {
-        validationMessage += `Внимание: В этом туре обнаружено ${drawCount1_1} матчей со счетом 1:1 (максимум ${MAX_UNIQUE_DRAWS_PER_TOUR}). `;
-    }
-    if (largeWinCount > MAX_LARGE_WINS_PER_TOUR) {
-        validationMessage += `Внимание: В этом туре обнаружено ${largeWinCount} матчей с крупным счетом (максимум ${MAX_LARGE_WINS_PER_TOUR}). `;
-    }
-
-    const messageDiv = document.getElementById('validationMessage');
-    if (messageDiv) {
-        messageDiv.textContent = validationMessage;
-    }
-}
-
-// --- Функция для отображения полного расписания ---
-function displayFullSchedule() {
-    fullScheduleContent.innerHTML = '';
-
-    if (schedule.length === 0) {
-        fullScheduleContent.innerHTML = '<p>Расписание еще не сгенерировано.</p>';
-        return;
-    }
-
-    schedule.forEach((tour, tourIndex) => {
-        const tourDiv = document.createElement('div');
-        tourDiv.style.marginBottom = '20px';
-
-        const tourTitle = document.createElement('h3');
-        tourTitle.textContent = `Тур ${tourIndex + 1}`;
-        tourDiv.appendChild(tourTitle);
-
-        if (tour.length === 0) {
-            tourDiv.innerHTML += '<p>Матчей нет.</p>';
-        } else {
-            const matchesList = document.createElement('ul');
-            matchesList.style.listStyle = 'none';
-            matchesList.style.padding = '0';
-
-            tour.forEach(match => {
-                const matchItem = document.createElement('li');
-                matchItem.style.marginBottom = '8px';
-                matchItem.style.display = 'flex';
-                matchItem.style.alignItems = 'center';
-                matchItem.style.justifyContent = 'space-between';
-                matchItem.style.maxWidth = '500px';
-
-                const scoreDisplay = match.score ? `(${match.score})` : '( - : - )';
-                const homeTeamSpan = document.createElement('span');
-                homeTeamSpan.textContent = match.homeTeam;
-                homeTeamSpan.style.flexBasis = '30%';
-                homeTeamSpan.style.textAlign = 'right';
-                homeTeamSpan.style.wordBreak = 'break-word';
-
-                const scoreSpan = document.createElement('span');
-                scoreSpan.textContent = scoreDisplay;
-                scoreSpan.style.flexBasis = '20%';
-                scoreSpan.style.textAlign = 'center';
-
-                const awayTeamSpan = document.createElement('span');
-                awayTeamSpan.textContent = match.awayTeam;
-                awayTeamSpan.style.flexBasis = '30%';
-                awayTeamSpan.style.textAlign = 'left';
-                awayTeamSpan.style.wordBreak = 'break-word';
-
-                const spotifyLinksDiv = document.createElement('div');
-                spotifyLinksDiv.className = 'spotify-links';
-                spotifyLinksDiv.style.flexBasis = '20%';
-                spotifyLinksDiv.style.justifyContent = 'center';
-
-                const homeSpotifyLink = document.createElement('a');
-                homeSpotifyLink.href = match.homeSpotifyUrl || "#";
-                homeSpotifyLink.className = 'spotify-link-home';
-                homeSpotifyLink.dataset.tourIndex = tourIndex;
-                homeSpotifyLink.dataset.matchIndex = schedule.indexOf(tour);
-                homeSpotifyLink.dataset.team = "home";
-                homeSpotifyLink.title = `Добавить песню для ${match.homeTeam}`;
-                homeSpotifyLink.textContent = '🎶';
-                if (!match.homeSpotifyUrl) {
-                    homeSpotifyLink.onclick = handleSpotifyLinkClick;
-                } else {
-                    homeSpotifyLink.target = "_blank";
-                }
-
-                const awaySpotifyLink = document.createElement('a');
-                awaySpotifyLink.href = match.awaySpotifyUrl || "#";
-                awaySpotifyLink.className = 'spotify-link-away';
-                awaySpotifyLink.dataset.tourIndex = tourIndex;
-                awaySpotifyLink.dataset.matchIndex = schedule.indexOf(tour);
-                awaySpotifyLink.dataset.team = "away";
-                awaySpotifyLink.title = `Добавить песню для ${match.awayTeam}`;
-                awaySpotifyLink.textContent = '🎶';
-                 if (!match.awaySpotifyUrl) {
-                    awaySpotifyLink.onclick = handleSpotifyLinkClick;
-                } else {
-                    awaySpotifyLink.target = "_blank";
-                }
-
-                spotifyLinksDiv.appendChild(homeSpotifyLink);
-                spotifyLinksDiv.appendChild(awaySpotifyLink);
-
-                matchItem.appendChild(homeTeamSpan);
-                matchItem.appendChild(scoreSpan);
-                matchItem.appendChild(awayTeamSpan);
-                matchItem.appendChild(spotifyLinksDiv);
-
-                tourDiv.appendChild(matchItem);
-            });
-            fullScheduleContent.appendChild(tourDiv);
-        }
-        fullScheduleContent.appendChild(tourDiv);
-    });
-}
-
-// --- Функция для обработки клика по кнопке Spotify ---
-function handleSpotifyLinkClick(event) {
-    event.preventDefault();
-    const link = event.target;
-    const tourIndex = parseInt(link.dataset.tourIndex);
-    const matchIndex = parseInt(link.dataset.matchIndex);
-    const teamType = link.dataset.team;
-
-    if (schedule[tourIndex] && schedule[tourIndex][matchIndex]) {
-        currentMatchDataForSpotify = {
-            tourIndex: tourIndex,
-            matchIndex: matchIndex,
-            teamType: teamType,
-            teamName: schedule[tourIndex][matchIndex][teamType + 'Team']
-        };
-
-        const currentUrl = schedule[tourIndex][matchIndex][teamType + 'SpotifyUrl'];
-        if (currentUrl) {
-            spotifyUrlInput.value = currentUrl;
-            currentSpotifyInfo.textContent = `Текущая ссылка для ${currentMatchDataForSpotify.teamName}: ${currentUrl}`;
-        } else {
-            spotifyUrlInput.value = '';
-            currentSpotifyInfo.textContent = `Введите ссылку для ${currentMatchDataForSpotify.teamName}:`;
-        }
-        openModal(spotifyModal);
-    } else {
-        console.error("Не удалось найти данные матча для Spotify:", tourIndex, matchIndex);
-    }
-}
-
-// --- Обработчик сохранения Spotify ссылки ---
-saveSpotifyUrlBtn.onclick = () => {
-    if (!currentMatchDataForSpotify) {
-        alert("Ошибка: Данные матча не найдены.");
-        return;
-    }
-    const url = spotifyUrlInput.value.trim();
-
-    if (url && (url.includes("spotify.com/track/") || url.includes("open.spotify.com/track/"))) {
-        const { tourIndex, matchIndex, teamType } = currentMatchDataForSpotify;
-        schedule[tourIndex][matchIndex][teamType + 'SpotifyUrl'] = url;
-
-        displayTour(currentTourIndex);
-        displayFullSchedule();
-
-        const linkElement = document.querySelector(`.spotify-link-${teamType}[data-tour-index='${tourIndex}'][data-match-index='${matchIndex}']`);
-        if (linkElement) {
-            linkElement.href = url;
-            linkElement.target = "_blank";
-            linkElement.onclick = null;
-        }
-
-        closeModal(spotifyModal);
-        saveData();
-        alert("Ссылка на песню успешно добавлена!");
-
-    } else if (url === "") {
-        const { tourIndex, matchIndex, teamType } = currentMatchDataForSpotify;
-        schedule[tourIndex][matchIndex][teamType + 'SpotifyUrl'] = "";
-
-        displayTour(currentTourIndex);
-        displayFullSchedule();
-
-        const linkElement = document.querySelector(`.spotify-link-${teamType}[data-tour-index='${tourIndex}'][data-match-index='${matchIndex}']`);
-        if (linkElement) {
-            linkElement.href = "#";
-            linkElement.target = "_self";
-            linkElement.onclick = handleSpotifyLinkClick;
-        }
-        closeModal(spotifyModal);
-        saveData();
-        alert("Ссылка на песню удалена.");
-    } else {
-        alert("Пожалуйста, введите корректную ссылку на трек Spotify.");
-    }
-};
-
-// --- Обработчики событий ---
-generateBtn.onclick = () => {
-    const teamsText = teamsInput.value.trim();
-    if (teamsText) {
-        teams = teamsText.split('\n').map(team => team.trim()).filter(team => team.length > 0);
-        if (teams.length < 2) {
-            alert('Пожалуйста, введите минимум 2 команды.');
-            return;
-        }
-        schedule = [];
-        standings = {};
-        teams.forEach(team => {
-            standings[team] = { played: 0, wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, points: 0 };
-        });
-
-        generateSchedule();
-        currentTourIndex = findFirstUnscoredMatchTour();
-        displayTour(currentTourIndex);
-        updateNavigationButtons();
-        displayFullSchedule();
-        updateStandingsDataAndDisplay();
-        saveData();
-    } else {
-        alert('Пожалуйста, введите названия команд.');
-    }
-};
-
-resetBtn.onclick = () => {
-    if (!confirm('Вы уверены, что хотите сбросить все данные? Это действие нельзя отменить.')) {
-        return;
-    }
-    teamsInput.value = '';
-    teams = [];
-    schedule = [];
-    currentTourIndex = 0;
-    standings = {};
-    localStorage.removeItem(STORAGE_KEY_TEAMS);
-    localStorage.removeItem(STORAGE_KEY_SCHEDULE);
-    localStorage.removeItem(STORAGE_KEY_CURRENT_TOUR);
-    currentTourOutput.innerHTML = '<p>Введите команды и нажмите "Сгенерировать Расписание".</p>';
-    fullScheduleContent.innerHTML = '';
-    standingsBodyModal.innerHTML = '';
-    currentTourNumSpan.textContent = '0';
-    totalToursNumSpan.textContent = '0';
-    tourJumpInput.value = '';
-    updateNavigationButtons();
-};
-
-prevTourBtn.onclick = () => {
-    if (currentTourIndex > 0) {
-        displayTour(currentTourIndex - 1);
-        saveData();
-    }
-};
-
-nextTourBtn.onclick = () => {
-    if (currentTourIndex < schedule.length - 1) {
-        displayTour(currentTourIndex + 1);
-        saveData();
-    }
-};
-
-jumpToTourBtn.onclick = () => {
-    const tourNumber = parseInt(tourJumpInput.value);
-    if (tourNumber >= 1 && tourNumber <= schedule.length) {
-        displayTour(tourNumber - 1);
-        tourJumpInput.value = '';
-        saveData();
-    } else if (schedule.length === 0) {
-        alert('Сначала сгенерируйте расписание.');
-    }
-    else {
-        alert('Пожалуйста, введите номер тура от 1 до ' + schedule.length);
-    }
-};
-
-showFullScheduleBtn.onclick = () => {
-    displayFullSchedule();
-    openModal(fullScheduleModal);
-};
-
-showStandingsBtn.onclick = () => {
-    updateStandingsDataAndDisplay();
-    openModal(standingsModal);
-};
-
-// --- Функция добавления слушателей на поля ввода счета ---
-function addScoreInputListeners() {
-    document.querySelectorAll('.score-input input').forEach(input => {
-        input.addEventListener('input', (e) => {
-            const tourIndex = parseInt(e.target.dataset.tourIndex);
-            const matchIndex = parseInt(e.target.dataset.matchIndex);
-            const teamType = e.target.dataset.team;
-
-            if (schedule[tourIndex] && schedule[tourIndex][matchIndex]) {
-                const scoreHomeInput = e.target.closest('.match-item').querySelector('.score-home');
-                const scoreAwayInput = e.target.closest('.match-item').querySelector('.score-away');
-
-                const scoreHome = parseInt(scoreHomeInput.value) >= 0 ? parseInt(scoreHomeInput.value) : 0;
-                const scoreAway = parseInt(scoreAwayInput.value) >= 0 ? parseInt(scoreAwayInput.value) : 0;
-
-                schedule[tourIndex][matchIndex].score = `${scoreHome}:${scoreAway}`;
-
-                displayTour(currentTourIndex);
-                validateTourResults(schedule[tourIndex]);
-                updateStandingsDataAndDisplay();
-                saveData();
-            }
-        });
-
-        // Обработка клавиш для ввода счета (разрешаем только цифры)
-        input.addEventListener('keydown', (e) => {
-            if (e.key.length === 1 && !/[0-9]/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
-                e.preventDefault();
-            }
-            if (e.key === 'ArrowRight' && e.target.classList.contains('score-home')) {
-                e.target.closest('.match-item').querySelector('.score-away').focus();
-                e.preventDefault();
-            }
-            if (e.key === 'ArrowLeft' && e.target.classList.contains('score-away')) {
-                e.target.closest('.match-item').querySelector('.score-home').focus();
-                e.preventDefault();
-            }
-        });
-
-        input.addEventListener('focus', (e) => {
-            if (e.target.value === '-') {
-                e.target.value = '';
-            }
-        });
-
-        input.addEventListener('blur', (e) => {
-            const tourIndex = parseInt(e.target.dataset.tourIndex);
-            const matchIndex = parseInt(e.target.dataset.matchIndex);
-            const teamType = e.target.dataset.team;
-
-            if (schedule[tourIndex] && schedule[tourIndex][matchIndex]) {
-                const scoreHomeInput = e.target.closest('.match-item').querySelector('.score-home');
-                const scoreAwayInput = e.target.closest('.match-item').querySelector('.score-away');
-
-                const scoreHome = parseInt(scoreHomeInput.value) >= 0 ? parseInt(scoreHomeInput.value) : 0;
-                const scoreAway = parseInt(scoreAwayInput.value) >= 0 ? parseInt(scoreAwayInput.value) : 0;
-
-                schedule[tourIndex][matchIndex].score = `${scoreHome}:${scoreAway}`;
-
-                if (scoreHomeInput.value === '' && scoreAwayInput.value === '') {
-                    scoreHomeInput.value = '-';
-                    scoreAwayInput.value = '-';
-                    schedule[tourIndex][matchIndex].score = "";
-                } else {
-                    if (scoreHomeInput.value === '') scoreHomeInput.value = '0';
-                    if (scoreAwayInput.value === '') scoreAwayInput.value = '0';
-                }
-
-                updateStandingsDataAndDisplay();
-                validateTourResults(schedule[tourIndex]);
-                saveData();
-            }
-        });
-    });
-}
-
-// --- Функция удаления команды ---
-function removeTeam(teamNameToRemove) {
-    if (!confirm(`Вы уверены, что хотите удалить команду "${teamNameToRemove}"? Это удалит всю историю и перестроит расписание.`)) {
-        return;
-    }
-
-    teams = teams.filter(team => team !== teamNameToRemove);
-    schedule = [];
-    standings = {};
-    teams.forEach(team => {
-        standings[team] = { played: 0, wins: 0, draws: 0, losses: 0, goalsFor: 0, goalsAgainst: 0, points: 0 };
-    });
-
-    if (teams.length < 2) {
-        alert("Осталось меньше двух команд. Расписание не может быть сгенерировано.");
-        resetBtn.click();
-        return;
-    }
-
-    generateSchedule();
-    currentTourIndex = findFirstUnscoredMatchTour();
-    displayTour(currentTourIndex);
-    updateNavigationButtons();
-    displayFullSchedule();
-    updateStandingsDataAndDisplay();
-    saveData();
-}
-
-// --- Инициализация при загрузке страницы ---
 document.addEventListener('DOMContentLoaded', () => {
-    loadData();
+    // --- Константы для Local Storage ---
+    const TEAMS_STORAGE_KEY = 'tournamentTeams';
+    const SCHEDULE_STORAGE_KEY = 'tournamentSchedule';
+    const RESULTS_STORAGE_KEY = 'tournamentResults';
+    const CURRENT_TOUR_STORAGE_KEY = 'currentTourIndex';
+    const TEAM_COUNT_FOR_STATS_KEY = 'teamCountForStats'; // Для статистики тура
 
-    generateBtn.onclick = generateBtn.onclick;
-    resetBtn.onclick = resetBtn.onclick;
-    prevTourBtn.onclick = prevTourBtn.onclick;
-    nextTourBtn.onclick = nextTourBtn.onclick;
-    jumpToTourBtn.onclick = jumpToTourBtn.onclick;
-    showFullScheduleBtn.onclick = showFullScheduleBtn.onclick;
-    showStandingsBtn.onclick = showStandingsBtn.onclick;
+    // --- Константы турнира ---
+    const TEAM_COUNT_INITIAL = 150; // Изначальное количество команд
+    const TECHNICAL_LOSS_SCORE = '0:3'; // Техническое поражение (для команды, которая должна быть справа)
+    const TECHNICAL_WIN_SCORE = '3:0'; // Техническая победа (для команды, которая должна быть слева)
+    const MAX_SCORE_INPUTS_PER_MATCH = 2; // Максимум полей для ввода счета в одном матче
+    const MIN_TEAMS_FOR_TOURNAMENT = 2; // Минимум команд для генерации расписания
 
-    closeFullScheduleBtn.onclick = () => closeModal(fullScheduleModal);
-    closeStandingsBtn.onclick = () => closeModal(standingsModal);
-    closeSpotifyModalBtn.onclick = () => closeModal(spotifyModal);
+    // --- Элементы DOM ---
+    const teamsInput = document.getElementById('teamsInput');
+    const generateBtn = document.getElementById('generateBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const scheduleContainer = document.getElementById('scheduleContainer');
+    const standingsTableBody = document.getElementById('standingsTableBody');
+    const prevTourBtn = document.getElementById('prevTourBtn');
+    const nextTourBtn = document.getElementById('nextTourBtn');
+    const currentTourDisplay = document.getElementById('currentTourDisplay');
+    const currentTourInput = document.getElementById('currentTourInput');
+    const teamManagementList = document.getElementById('teamList'); // UL для списка команд
+    const addTeamInput = document.getElementById('addTeamInput');
+    const addTeamBtn = document.getElementById('addTeamBtn');
 
-    window.onclick = (event) => {
-        if (event.target === fullScheduleModal) {
-            closeModal(fullScheduleModal);
-        }
-        if (event.target === standingsModal) {
-            closeModal(standingsModal);
-        }
-        if (event.target === spotifyModal) {
-            closeModal(spotifyModal);
-        }
+    // --- Глобальные переменные ---
+    let teams = []; // Массив названий команд
+    let schedule = []; // Массив туров, каждый тур - массив матчей { team1: 'Name', team2: 'Name' }
+    let results = {}; // Объект для хранения результатов матчей { 'tourIndex-matchIndex': 'score1:score2' }
+    let currentTourIndex = 0; // Индекс текущего тура (начинается с 0)
+    let totalTeamsForStats = 0; // Общее количество команд для статистики тура (фиксируется при генерации)
+
+    // --- Цветовые константы (для легкой смены темы) ---
+    const COLORS = {
+        primaryBg: '#1a1a1a',
+        secondaryBg: '#2c2c2c',
+        sectionBg: '#383838',
+        inputBg: '#333',
+        textColor: '#e0e0e0',
+        accent: '#7CFC00', // Салатовый
+        accentHover: '#32CD32',
+        buttonBg: '#7CFC00',
+        buttonHover: '#32CD32',
+        danger: '#DC143C',
+        dangerHover: '#C00000',
+        tableHeader: '#4CAF50', // Зеленый
+        tableEvenRow: '#333',
+        inputBorderFocus: '#7CFC00',
+        scoreInputBg: '#222',
+        scoreInputBorder: '#666',
+        techLossColor: '#FF6347', // Ярко-красный
+        warningBg: '#444',
+        warningColor: '#FFD700', // Золотистый
+        navButtonBg: '#555',
+        navButtonHover: '#7CFC00',
+        teamListItemBg: '#333',
+        teamListItemBorder: '#444',
+        teamNameDisplay: '#e0e0e0',
+        teamNameFontWeight: 500,
     };
 
-    if (teams.length > 0 && schedule.length > 0) {
-        displayTour(currentTourIndex);
-        updateNavigationButtons();
-        displayFullSchedule();
-        updateStandingsDataAndDisplay();
-    } else {
-        currentTourOutput.innerHTML = '<p>Введите команды и нажмите "Сгенерировать Расписание".</p>';
-        currentTourNumSpan.textContent = '0';
-        totalToursNumSpan.textContent = '0';
-        updateNavigationButtons();
+    // --- Инициализация ---
+    function initialize() {
+        loadData();
+        renderTeamList(); // Отрисовываем список команд
+        generateFullSchedule(); // Генерируем расписание при первой загрузке, если нет сохраненного
+        updateUI(); // Обновляем весь UI
+        setupEventListeners(); // Настраиваем обработчики событий
     }
+
+    // --- Функции управления данными (Local Storage) ---
+
+    function loadData() {
+        const savedTeams = localStorage.getItem(TEAMS_STORAGE_KEY);
+        const savedSchedule = localStorage.getItem(SCHEDULE_STORAGE_KEY);
+        const savedResults = localStorage.getItem(RESULTS_STORAGE_KEY);
+        const savedCurrentTour = localStorage.getItem(CURRENT_TOUR_STORAGE_KEY);
+        const savedTeamCountForStats = localStorage.getItem(TEAM_COUNT_FOR_STATS_KEY);
+
+        if (savedTeams) {
+            teams = JSON.parse(savedTeams);
+        } else {
+            // Если нет сохраненных команд, заполняем начальное количество
+            teams = Array.from({ length: TEAM_COUNT_INITIAL }, (_, i) => `Песня/Команда ${i + 1}`);
+        }
+
+        if (savedSchedule) {
+            schedule = JSON.parse(savedSchedule);
+        }
+
+        if (savedResults) {
+            results = JSON.parse(savedResults);
+        }
+
+        if (savedCurrentTour !== null) {
+            currentTourIndex = parseInt(savedCurrentTour, 10);
+        }
+
+        if (savedTeamCountForStats !== null) {
+            totalTeamsForStats = parseInt(savedTeamCountForStats, 10);
+        } else {
+            totalTeamsForStats = teams.length; // Инициализация
+        }
+    }
+
+    function saveData() {
+        localStorage.setItem(TEAMS_STORAGE_KEY, JSON.stringify(teams));
+        localStorage.setItem(SCHEDULE_STORAGE_KEY, JSON.stringify(schedule));
+        localStorage.setItem(RESULTS_STORAGE_KEY, JSON.stringify(results));
+        localStorage.setItem(CURRENT_TOUR_STORAGE_KEY, currentTourIndex.toString());
+        localStorage.setItem(TEAM_COUNT_FOR_STATS_KEY, totalTeamsForStats.toString());
+    }
+
+    // --- Функции генерации расписания (Round Robin) ---
+
+    // Алгоритм генерации расписания Round Robin (по Бёрнсайду)
+    function generateRoundRobinSchedule(teamList) {
+        const numTeams = teamList.length;
+        if (numTeams < MIN_TEAMS_FOR_TOURNAMENT) return [];
+
+        const isEven = numTeams % 2 === 0;
+        const teams = [...teamList];
+        if (!isEven) {
+            teams.push(null); // 'null' представляет "призрака" для нечетного числа команд
+        }
+
+        const numTeamsAdjusted = teams.length;
+        const numRounds = numTeamsAdjusted - 1;
+        const matchesPerRound = numTeamsAdjusted / 2;
+        const generatedSchedule = [];
+
+        const firstTeam = teams[0]; // Первая команда остается на месте
+        const rotatingTeams = teams.slice(1); // Остальные команды вращаются
+
+        for (let round = 0; round < numRounds; round++) {
+            const currentRoundMatches = [];
+            const rotatingIndex = round % rotatingTeams.length; // Индекс вращения для второй команды
+
+            // Определяем пары
+            const teamA = firstTeam;
+            const teamB = rotatingTeams[rotatingIndex];
+
+            if (teamA !== null && teamB !== null) {
+                currentRoundMatches.push({ team1: teamA, team2: teamB });
+            }
+
+            for (let i = 1; i < matchesPerRound; i++) {
+                const teamC = rotatingTeams[(rotatingIndex + i) % rotatingTeams.length];
+                const teamD = rotatingTeams[(rotatingIndex - i + rotatingTeams.length) % rotatingTeams.length];
+
+                if (teamC !== null && teamD !== null) {
+                    currentRoundMatches.push({ team1: teamC, team2: teamD });
+                }
+            }
+            generatedSchedule.push(currentRoundMatches);
+        }
+        return generatedSchedule;
+    }
+
+    // Полная генерация расписания и обновление всех данных
+    function generateFullSchedule() {
+        // Валидация: нужно как минимум 2 команды
+        if (teams.length < MIN_TEAMS_FOR_TOURNAMENT) {
+            schedule = [];
+            results = {};
+            currentTourIndex = 0;
+            totalTeamsForStats = teams.length;
+            updateUI();
+            alert(`Для проведения турнира необходимо как минимум ${MIN_TEAMS_FOR_TOURNAMENT} команды.`);
+            return;
+        }
+
+        schedule = generateRoundRobinSchedule(teams);
+        results = {}; // Очищаем результаты при полной перегенерации
+        currentTourIndex = 0; // Сбрасываем на первый тур
+        totalTeamsForStats = teams.length; // Сохраняем количество команд для статистики тура
+
+        // Применяем технические поражения ко всем матчам, где участвует удаленная команда
+        applyTechnicalLossesToSchedule();
+
+        saveData();
+        updateUI();
+    }
+
+    // Применение технических поражений ко всем матчам в расписании
+    function applyTechnicalLossesToSchedule() {
+        const newResults = {};
+        schedule.forEach((roundMatches, tourIndex) => {
+            roundMatches.forEach((match, matchIndex) => {
+                const tourId = `${tourIndex}-${matchIndex}`;
+                const team1Name = match.team1;
+                const team2Name = match.team2;
+
+                const isTeam1Valid = teams.includes(team1Name);
+                const isTeam2Valid = teams.includes(team2Name);
+
+                if (!isTeam1Valid || !isTeam2Valid) {
+                    // Если одна из команд удалена (не присутствует в текущем списке `teams`)
+                    if (team1Name && team2Name) { // Убедимся, что это не 'BYE' или null
+                        if (!isTeam1Valid) { // Команда 1 удалена
+                            newResults[tourId] = TECHNICAL_LOSS_SCORE; // 0:3
+                        } else { // Команда 2 удалена
+                            newResults[tourId] = TECHNICAL_WIN_SCORE; // 3:0
+                        }
+                    }
+                } else {
+                    // Если обе команды валидны, берем сохраненный результат, если он есть
+                    if (results[tourId]) {
+                        newResults[tourId] = results[tourId];
+                    }
+                    // Иначе, результат остается пустым (матч не сыгран)
+                }
+            });
+        });
+        results = newResults; // Обновляем объект результатов
+        saveData();
+    }
+
+
+    // --- Функции обновления UI ---
+
+    // Обновление отображения списка команд
+    function renderTeamList() {
+        teamManagementList.innerHTML = ''; // Очищаем текущий список
+        teams.forEach((team, index) => {
+            const li = document.createElement('li');
+
+            const teamInfo = document.createElement('div');
+            teamInfo.classList.add('team-info');
+
+            const teamNameSpan = document.createElement('span');
+            teamNameSpan.classList.add('team-name-display');
+            teamNameSpan.textContent = team;
+            teamInfo.appendChild(teamNameSpan);
+
+            // Кнопка удаления команды
+            const removeBtn = document.createElement('button');
+            removeBtn.classList.add('remove-team-btn');
+            removeBtn.textContent = '❌';
+            removeBtn.addEventListener('click', () => {
+                if (confirm(`Вы уверены, что хотите удалить команду "${team}"? Все связанные матчи будут пересчитаны.`)) {
+                    removeTeam(index);
+                }
+            });
+            teamInfo.appendChild(removeBtn);
+
+            li.appendChild(teamInfo);
+            teamManagementList.appendChild(li);
+        });
+        totalTeamsForStats = teams.length; // Обновляем общее количество команд для статистики
+        saveData(); // Сохраняем изменения
+    }
+
+    // Добавление новой команды
+    function addTeam() {
+        const teamName = addTeamInput.value.trim();
+        if (teamName) {
+            if (teams.some(t => t.toLowerCase() === teamName.toLowerCase())) { // Проверка на дубликаты без учета регистра
+                alert(`Команда "${teamName}" уже существует.`);
+                return;
+            }
+            teams.push(teamName);
+            addTeamInput.value = ''; // Очищаем поле ввода
+            renderTeamList();
+            generateFullSchedule(); // Перегенерация расписания после добавления
+        } else {
+            alert('Введите название команды.');
+        }
+    }
+
+    // Удаление команды
+    function removeTeam(index) {
+        if (index >= 0 && index < teams.length) {
+            teams.splice(index, 1);
+            renderTeamList();
+            generateFullSchedule(); // Перегенерация расписания после удаления
+        }
+    }
+
+    // Сброс всех данных
+    function resetAllData() {
+        if (confirm("Вы уверены, что хотите сбросить все данные турнира (расписание, результаты, команды)? Это действие необратимо.")) {
+            localStorage.clear(); // Очищаем весь Local Storage
+            // Перезагружаем страницу, чтобы все инициализировалось заново
+            window.location.reload();
+        }
+    }
+
+    // Обработка ввода счета матча
+    function handleScoreInput(event, tourIndex, matchIndex) {
+        const input = event.target;
+        const value = input.value;
+
+        // Проверяем, что введено число и оно не отрицательное
+        if (!/^\d+$/.test(value)) {
+            input.value = ''; // Очищаем, если не число
+            return;
+        }
+
+        const tourId = `${tourIndex}-${matchIndex}`;
+        const matchElement = input.closest('.match');
+        const scoreInputs = matchElement.querySelectorAll('.score-input');
+        const team1Input = scoreInputs[0];
+        const team2Input = scoreInputs[1];
+
+        // Обновляем объект результатов
+        results[tourId] = `${team1Input.value || ''}:${team2Input.value || ''}`; // Сохраняем пустые строки, если поле пустое
+
+        // Проверяем, заполнены ли оба поля
+        if (team1Input.value && team2Input.value) {
+            input.classList.add('filled'); // Добавляем класс для стилизации
+            updateStandings(); // Обновляем таблицу сразу после заполнения обоих полей
+            checkTourCompletionAndStats(tourIndex); // Проверяем статистику тура
+        } else {
+            input.classList.remove('filled');
+            updateStandings(); // Обновляем таблицу, даже если одно поле пустое (чтобы учесть изменения)
+        }
+
+        saveData();
+    }
+
+    // Проверка, является ли матч сыгранным (оба счета введены)
+    function isMatchPlayed(tourIndex, matchIndex) {
+        const tourId = `${tourIndex}-${matchIndex}`;
+        const score = results[tourId];
+        if (!score) return false;
+        const scores = score.split(':');
+        return scores.length === 2 && scores[0] !== '' && scores[1] !== '';
+    }
+
+    // Получение результата матча (с учетом тех. поражений и сохраненных результатов)
+    function getMatchResult(tourIndex, matchIndex) {
+        const tourId = `${tourIndex}-${matchIndex}`;
+
+        // 1. Проверяем сохраненный результат
+        if (results[tourId]) {
+            return results[tourId];
+        }
+
+        // 2. Если нет сохраненного результата, проверяем, есть ли техническое поражение
+        if (!schedule[tourIndex] || !schedule[tourIndex][matchIndex]) return null; // Нет такого матча
+
+        const match = schedule[tourIndex][matchIndex];
+        const team1Name = match.team1;
+        const team2Name = match.team2;
+
+        // Если команды 'null' или 'BYE', или одна из них отсутствует в текущем списке `teams`
+        const isTeam1Valid = teams.includes(team1Name);
+        const isTeam2Valid = teams.includes(team2Name);
+
+        if (!isTeam1Valid && team1Name !== null) { // Команда 1 удалена
+            return TECHNICAL_LOSS_SCORE; // 0:3
+        }
+        if (!isTeam2Valid && team2Name !== null) { // Команда 2 удалена
+            return TECHNICAL_WIN_SCORE; // 3:0
+        }
+
+        // Если матч не сыгран и нет тех. поражения
+        return null;
+    }
+
+
+    // --- Функции отрисовки UI ---
+
+    // Отрисовка расписания
+    function renderSchedule() {
+        scheduleContainer.innerHTML = ''; // Очищаем контейнер
+        if (!schedule || schedule.length === 0) {
+            scheduleContainer.innerHTML = '<p>Расписание еще не сгенерировано или нет команд.</p>';
+            return;
+        }
+
+        // Проходим по всем турам
+        schedule.forEach((roundMatches, tourIndex) => {
+            const tourDiv = document.createElement('div');
+            tourDiv.classList.add('tour-display');
+            tourDiv.id = `tour-${tourIndex}`; // ID для навигации
+
+            const tourTitle = document.createElement('h3');
+            tourTitle.textContent = `Тур ${tourIndex + 1}`;
+
+            // --- Статистическое уведомление тура ---
+            const statsWarningDiv = document.createElement('div');
+            statsWarningDiv.classList.add('tour-stats-warning');
+            // Проверяем, нужно ли показать уведомление
+            const tourStats = calculateTourStats(tourIndex);
+            if (tourStats) {
+                statsWarningDiv.textContent = tourStats;
+                statsWarningDiv.style.display = 'inline-block';
+            } else {
+                statsWarningDiv.style.display = 'none';
+            }
+            tourDiv.appendChild(statsWarningDiv);
+            tourDiv.prepend(tourTitle); // Добавляем заголовок перед уведомлением
+
+            // Создаем контейнер для матчей, чтобы его можно было прокрутить
+            const matchesWrapper = document.createElement('div');
+            matchesWrapper.style.maxHeight = '0'; // Скрыто по умолчанию
+            matchesWrapper.style.overflow = 'hidden';
+            matchesWrapper.style.transition = 'max-height 0.5s ease-out';
+            tourDiv.appendChild(matchesWrapper);
+
+            // Рендерим матчи тура
+            roundMatches.forEach((match, matchIndex) => {
+                const matchElement = document.createElement('div');
+                matchElement.classList.add('match');
+
+                const team1Name = match.team1;
+                const team2Name = match.team2;
+
+                const isTeam1Valid = teams.includes(team1Name);
+                const isTeam2Valid = teams.includes(team2Name);
+
+                // Spotify ссылки (иконки)
+                const spotifyLink1 = document.createElement('a');
+                spotifyLink1.classList.add('spotify-link');
+                spotifyLink1.href = '#';
+                spotifyLink1.textContent = '🎵';
+                spotifyLink1.dataset.teamName = team1Name;
+                spotifyLink1.style.visibility = (team1Name !== null && isTeam1Valid) ? 'visible' : 'hidden';
+                matchElement.appendChild(spotifyLink1);
+
+                // Название команды 1
+                const teamName1Span = document.createElement('span');
+                teamName1Span.classList.add('team-name');
+                teamName1Span.textContent = team1Name !== null ? team1Name : 'BYE';
+                matchElement.appendChild(teamName1Span);
+
+                // Поля ввода счета или отображение результата
+                const scoreResult = getMatchResult(tourIndex, matchIndex);
+                let scoreDisplayHTML = '';
+
+                if (scoreResult) {
+                    // Если есть результат (сыгран или тех. поражение)
+                    const scores = scoreResult.split(':');
+                    const score1 = scores[0];
+                    const score2 = scores[1];
+                    // Проверяем, является ли это тех. поражением
+                    const isTechLoss = !isTeam1Valid || !isTeam2Valid;
+                    scoreDisplayHTML = `
+                        <span class="technical-loss" style="color: ${isTechLoss ? COLORS.techLossColor : COLORS.textColor};">
+                            ${score1}:${score2}
+                        </span>
+                    `;
+                } else if (isTeam1Valid && isTeam2Valid) {
+                    // Если матч не сыгран и обе команды валидны, показываем поля ввода
+                    const scoreInput1 = document.createElement('input');
+                    scoreInput1.type = 'number';
+                    scoreInput1.classList.add('score-input');
+                    scoreInput1.dataset.tourIndex = tourIndex;
+                    scoreInput1.dataset.matchIndex = matchIndex;
+                    scoreInput1.dataset.team = '1';
+                    scoreInput1.placeholder = '-';
+                    scoreInput1.addEventListener('input', (e) => handleScoreInput(e, tourIndex, matchIndex));
+                    matchElement.appendChild(scoreInput1);
+
+                    matchElement.insertAdjacentHTML('beforeend', ' : '); // Разделитель
+
+                    const scoreInput2 = document.createElement('input');
+                    scoreInput2.type = 'number';
+                    scoreInput2.classList.add('score-input');
+                    scoreInput2.dataset.tourIndex = tourIndex;
+                    scoreInput2.dataset.matchIndex = matchIndex;
+                    scoreInput2.dataset.team = '2';
+                    scoreInput2.placeholder = '-';
+                    scoreInput2.addEventListener('input', (e) => handleScoreInput(e, tourIndex, matchIndex));
+                    matchElement.appendChild(scoreInput2);
+                } else {
+                    // Одна из команд удалена, но результат еще не проставлен (крайний случай)
+                    scoreDisplayHTML = `<span>- : -</span>`;
+                }
+
+                if (scoreDisplayHTML) {
+                    matchElement.insertAdjacentHTML('beforeend', scoreDisplayHTML);
+                }
+
+                // Название команды 2
+                const teamName2Span = document.createElement('span');
+                teamName2Span.classList.add('team-name');
+                teamName2Span.textContent = team2Name !== null ? team2Name : 'BYE';
+                matchElement.appendChild(teamName2Span);
+
+                // Spotify ссылка 2
+                const spotifyLink2 = document.createElement('a');
+                spotifyLink2.classList.add('spotify-link');
+                spotifyLink2.href = '#';
+                spotifyLink2.textContent = '🎵';
+                spotifyLink2.dataset.teamName = team2Name;
+                spotifyLink2.style.visibility = (team2Name !== null && isTeam2Valid) ? 'visible' : 'hidden';
+                matchElement.appendChild(spotifyLink2);
+
+                // Добавляем созданный матч в контейнер тура
+                matchesWrapper.appendChild(matchElement);
+            });
+
+            scheduleContainer.appendChild(tourDiv);
+        });
+
+        applyStandingsHighlighting(); // Применяем стили для зон
+        updateNavigation(); // Обновляем навигацию
+        scrollToCurrentTour(); // Прокрутка к текущему туру
+        attachSpotifyLinkHandlers(); // Прикрепляем обработчики для Spotify ссылок
+        updateStandings(); // Обновляем таблицу после отрисовки расписания
+    }
+
+    // Применение стилей зон вылета/стыков к таблице
+    function applyStandingsHighlighting() {
+        const rows = standingsTableBody.querySelectorAll('tr');
+        const numTeamsInTable = totalTeamsForStats; // Используем сохраненное количество команд для статистики
+
+        rows.forEach((row, index) => {
+            const teamPosition = index + 1; // Позиция команды (1-based)
+
+            row.classList.remove('relegation-zone', 'relegation-playoff'); // Сбрасываем предыдущие классы
+
+            // Применяем классы, только если позиция в пределах текущего числа команд И находится в зонах
+            if (teamPosition <= numTeamsInTable) {
+                if (teamPosition >= 121 && teamPosition <= 150) {
+                    row.classList.add('relegation-zone');
+                } else if (teamPosition >= 101 && teamPosition <= 120) {
+                    row.classList.add('relegation-playoff');
+                }
+            }
+        });
+    }
+
+
+    // Отрисовка турнирной таблицы
+    function updateStandings() {
+        if (!standingsTableBody) return;
+        standingsTableBody.innerHTML = ''; // Очищаем тело таблицы
+
+        const teamStats = {}; // { teamName: { wins: 0, draws: 0, losses: 0, goalsScored: 0, goalsConceded: 0, points: 0 } }
+
+        // Инициализация статистики для всех команд
+        teams.forEach(team => {
+            teamStats[team] = {
+                wins: 0, draws: 0, losses: 0,
+                goalsScored: 0, goalsConceded: 0, points: 0,
+                teamName: team // Сохраняем имя для сортировки
+            };
+        });
+
+        // Обрабатываем все матчи в расписании
+        schedule.forEach((roundMatches, tourIndex) => {
+            roundMatches.forEach((match, matchIndex) => {
+                const team1Name = match.team1;
+                const team2Name = match.team2;
+
+                // Проверяем, существуют ли команды в текущем списке `teams`
+                const isTeam1Valid = teams.includes(team1Name);
+                const isTeam2Valid = teams.includes(team2Name);
+
+                // Если обе команды недействительны (маловероятно, но возможно), пропускаем
+                if (!isTeam1Valid && !isTeam2Valid) return;
+
+                const result = getMatchResult(tourIndex, matchIndex);
+                if (!result) return; // Матч не сыгран и не тех. поражение
+
+                const scores = result.split(':');
+                const score1 = parseInt(scores[0], 10);
+                const score2 = parseInt(scores[1], 10);
+
+                // Если команды недействительны, их статистики не обновляем (они не участвуют)
+                if (isTeam1Valid && team1Name !== null) {
+                    teamStats[team1Name].goalsScored += score1;
+                    teamStats[team1Name].goalsConceded += score2;
+                }
+                if (isTeam2Valid && team2Name !== null) {
+                    teamStats[team2Name].goalsScored += score2;
+                    teamStats[team2Name].goalsConceded += score1;
+                }
+
+                // Расчет очков и статистики только для валидных команд
+                if (isTeam1Valid && team1Name !== null && isTeam2Valid && team2Name !== null) {
+                    if (score1 > score2) { // Победа команды 1
+                        teamStats[team1Name].wins++;
+                        teamStats[team1Name].points += 3;
+                        teamStats[team2Name].losses++;
+                    } else if (score1 < score2) { // Победа команды 2
+                        teamStats[team2Name].wins++;
+                        teamStats[team2Name].points += 3;
+                        teamStats[team1Name].losses++;
+                    } else { // Ничья
+                        teamStats[team1Name].draws++;
+                        teamStats[team1Name].points += 1;
+                        teamStats[team2Name].draws++;
+                        teamStats[team2Name].points += 1;
+                    }
+                } else if (isTeam1Valid && team1Name !== null && !isTeam2Valid) { // Команда 2 удалена (тех. поражение 0:3)
+                    // У команды 1 победа (3:0)
+                    teamStats[team1Name].wins++;
+                    teamStats[team1Name].points += 3;
+                    teamStats[team1Name].goalsScored += 3; // Засчитываем 3 гола
+                    teamStats[team1Name].goalsConceded += 0; // 0 пропущенных
+                } else if (!isTeam1Valid && isTeam2Valid && team2Name !== null) { // Команда 1 удалена (тех. поражение 0:3)
+                    // У команды 2 победа (3:0)
+                    teamStats[team2Name].wins++;
+                    teamStats[team2Name].points += 3;
+                    teamStats[team2Name].goalsScored += 3; // Засчитываем 3 гола
+                    teamStats[team2Name].goalsConceded += 0; // 0 пропущенных
+                }
+            });
+        });
+
+        // Преобразование объекта статистики в массив для сортировки
+        const sortedTeams = Object.values(teamStats);
+
+        // Сортировка таблицы
+        sortedTeams.sort((a, b) => {
+            if (b.points !== a.points) {
+                return b.points - a.points; // Сначала по очкам
+            }
+            const diffA = a.goalsScored - a.goalsConceded;
+            const diffB = b.goalsScored - b.goalsConceded;
+            if (diffB !== diffA) {
+                return diffB - diffA; // Затем по разнице мячей
+            }
+            return b.goalsScored - a.goalsScored; // Затем по забитым мячам
+        });
+
+        // Отрисовка строк таблицы
+        // Заполняем таблицу до 150 строк, даже если команд меньше
+        const maxTableRows = 150;
+        for (let i = 0; i < maxTableRows; i++) {
+            const tr = document.createElement('tr');
+            const position = i + 1;
+
+            if (i < sortedTeams.length) {
+                // Если есть команда на этой позиции
+                const teamData = sortedTeams[i];
+                const goalDifference = teamData.goalsScored - teamData.goalsConceded;
+
+                tr.innerHTML = `
+                    <td>${position}</td>
+                    <td>${teamData.teamName}</td>
+                    <td>${teamData.wins + teamData.draws + teamData.losses}</td>
+                    <td>${teamData.wins}</td>
+                    <td>${teamData.draws}</td>
+                    <td>${teamData.losses}</td>
+                    <td>${teamData.goalsScored}</td>
+                    <td>${teamData.goalsConceded}</td>
+                    <td>${goalDifference >= 0 ? '+' : ''}${goalDifference}</td>
+                    <td>${teamData.points}</td>
+                `;
+            } else {
+                // Пустая строка, если команд меньше 150
+                tr.innerHTML = `
+                    <td>${position}</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                `;
+            }
+            standingsTableBody.appendChild(tr);
+        }
+
+        applyStandingsHighlighting(); // Применяем стили зон после отрисовки
+    }
+
+
+    // --- Функции навигации по турам ---
+
+    function updateNavigation() {
+        const totalTours = schedule.length;
+        if (totalTours === 0) {
+            currentTourDisplay.textContent = 'Тур: -';
+            currentTourInput.value = '';
+            currentTourInput.disabled = true;
+            prevTourBtn.disabled = true;
+            nextTourBtn.disabled = true;
+            return;
+        }
+
+        currentTourDisplay.textContent = `Тур: ${currentTourIndex + 1}`;
+        currentTourInput.value = currentTourIndex + 1;
+        currentTourInput.min = 1;
+        currentTourInput.max = totalTours;
+        prevTourBtn.disabled = currentTourIndex === 0;
+        nextTourBtn.disabled = currentTourIndex === totalTours - 1;
+    }
+
+    function goToTour(tourIndex) {
+        if (tourIndex >= 0 && tourIndex < schedule.length) {
+            currentTourIndex = tourIndex;
+            saveData();
+            updateNavigation();
+            scrollToCurrentTour();
+        }
+    }
+
+    function scrollToCurrentTour() {
+        if (schedule.length === 0) return;
+        const tourElement = document.getElementById(`tour-${currentTourIndex}`);
+        if (tourElement) {
+            tourElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Раскрываем матчи текущего тура
+            const matchesWrapper = tourElement.querySelector('.schedule-section > div'); // Ищем обертку матчей
+            if (matchesWrapper) {
+                matchesWrapper.style.maxHeight = matchesWrapper.scrollHeight + 'px';
+            }
+        }
+    }
+
+    // --- Статистические проверки тура ---
+
+    // Подсчет статистики для конкретного тура
+    function calculateTourStats(tourIndex) {
+        if (!schedule[tourIndex]) return null;
+
+        let drawsCount = 0;
+        let total4GoalsCount = 0;
+        let hasInvalidTeamsInMatch = false; // Флаг, есть ли матчи с удаленными командами
+
+        schedule[tourIndex].forEach((match, matchIndex) => {
+            const result = getMatchResult(tourIndex, matchIndex);
+            if (!result) return; // Пропускаем, если матч не сыгран
+
+            const scores = result.split(':');
+            const score1 = parseInt(scores[0], 10);
+            const score2 = parseInt(scores[1], 10);
+
+            // Проверка на ничью
+            if (score1 === score2) {
+                drawsCount++;
+            }
+
+            // Проверка на тотал голов = 4
+            if (score1 + score2 === 4) {
+                total4GoalsCount++;
+            }
+
+            // Проверка на участие удаленных команд
+            const team1Name = match.team1;
+            const team2Name = match.team2;
+            const isTeam1Valid = teams.includes(team1Name);
+            const isTeam2Valid = teams.includes(team2Name);
+            if (!isTeam1Valid || !isTeam2Valid) {
+                hasInvalidTeamsInMatch = true;
+            }
+        });
+
+        // Определяем, нужно ли выводить уведомление
+        const expectedDraws = 1;
+        const expectedTotal4 = 6;
+
+        // Учитываем, что если есть матчи с удаленными командами, то статистика может быть нерелевантна
+        // В таком случае, по заданию, лучше выводить ❌ ❌
+        if (hasInvalidTeamsInMatch) {
+            return '❌ ❌'; // Показываем, что статистика не может быть корректно оценена
+        }
+
+        let warningString = '';
+        if (drawsCount !== expectedDraws) {
+            warningString += '❌ ';
+        } else {
+            warningString += '✅️ ';
+        }
+
+        if (total4GoalsCount !== expectedTotal4) {
+            warningString += '❌';
+        } else {
+            warningString += '✅️';
+        }
+
+        // Возвращаем строку уведомления, только если она отличается от "идеальной" или если есть тех. поражения
+        if (warningString === '✅️ ✅️' && !hasInvalidTeamsInMatch) {
+            return null; // Идеальная ситуация, уведомление не нужно
+        } else {
+            return warningString; // Возвращаем уведомление
+        }
+    }
+
+    // Проверка и обновление уведомления тура при изменении счета
+    function checkTourCompletionAndStats(tourIndex) {
+        const tourElement = document.getElementById(`tour-${tourIndex}`);
+        if (!tourElement) return;
+
+        const tourStatsWarning = tourElement.querySelector('.tour-stats-warning');
+        const tourStats = calculateTourStats(tourIndex);
+
+        if (tourStats) {
+            tourStatsWarning.textContent = tourStats;
+            tourStatsWarning.style.display = 'inline-block';
+        } else {
+            tourStatsWarning.style.display = 'none';
+        }
+    }
+
+    // --- Обработчики событий ---
+    function setupEventListeners() {
+        // Генерация расписания (из текстового поля)
+        generateBtn.addEventListener('click', () => {
+            const teamsString = teamsInput.value.trim();
+            if (teamsString) {
+                // Разделяем команды, удаляем пустые строки и дубликаты
+                teams = teamsString.split(',')
+                                   .map(t => t.trim())
+                                   .filter(t => t) // Убираем пустые строки
+                                   .filter((t, i, arr) => arr.indexOf(t) === i); // Убираем дубликаты
+                renderTeamList(); // Обновляем список команд в секции управления
+                generateFullSchedule();
+            } else {
+                alert('Пожалуйста, введите названия команд через запятую.');
+            }
+        });
+
+        // Сброс всех данных
+        resetBtn.addEventListener('click', resetAllData);
+
+        // Добавление команды через секцию управления
+        addTeamBtn.addEventListener('click', addTeam);
+        addTeamInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addTeam();
+            }
+        });
+
+        // Навигация по турам
+        prevTourBtn.addEventListener('click', () => goToTour(currentTourIndex - 1));
+        nextTourBtn.addEventListener('click', () => goToTour(currentTourIndex + 1));
+        currentTourInput.addEventListener('change', () => {
+            const newTour = parseInt(currentTourInput.value, 10) - 1;
+            goToTour(newTour);
+        });
+
+        // Обработка ввода счета (прикрепляется динамически в renderSchedule)
+
+        // Обработка ввода в текстовое поле для команд при генерации
+        teamsInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Предотвращаем отправку формы, если она есть
+                generateBtn.click(); // Эмулируем клик по кнопке генерации
+            }
+        });
+    }
+
+    // Прикрепление обработчиков для Spotify ссылок (нужно делать после отрисовки)
+    function attachSpotifyLinkHandlers() {
+        document.querySelectorAll('.match .spotify-link').forEach(link => {
+            // Проверяем, есть ли уже обработчик, чтобы не добавлять многократно
+            if (!link.dataset.hasListener) {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault(); // Предотвращаем переход по ссылке #
+                    const teamName = link.dataset.teamName;
+                    if (teamName && teamName !== 'BYE' && teams.includes(teamName)) {
+                        // Здесь может быть логика открытия Spotify или перехода на страницу команды
+                        alert(`Открытие Spotify для команды: "${teamName}"`);
+                        // Пример: window.open(`https://open.spotify.com/search/${encodeURIComponent(teamName)}`);
+                    } else if (teamName === 'BYE') {
+                        alert("У этого матча нет команды (BYE).");
+                    } else {
+                        alert(`Команда "${teamName}" не найдена или удалена.`);
+                    }
+                });
+                link.dataset.hasListener = 'true'; // Отмечаем, что обработчик добавлен
+            }
+        });
+    }
+
+
+    // Обновление всего UI: расписание, таблицу, навигацию
+    function updateUI() {
+        renderSchedule();
+        updateStandings();
+        updateNavigation();
+    }
+
+    // --- Запуск инициализации ---
+    initialize();
+
+    // --- Конец скрипта ---
+    // Если бы потребовалось больше места, я бы указал это здесь.
+    // Но, надеюсь, всё уместилось.
 });
