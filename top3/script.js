@@ -85,7 +85,6 @@ function init() {
     }
 }
 
-// --- ИСПРАВЛЕННАЯ ФУНКЦИЯ ---
 // Генерация расписания Round Robin
 function generateRoundRobinSchedule() {
     const inputText = teamsInput.value.trim();
@@ -93,8 +92,7 @@ function generateRoundRobinSchedule() {
         alert("Пожалуйста, введите названия команд.");
         return;
     }
-    // --- ИСПРАВЛЕНИЕ НАЧАЛО ---
-    // Полностью сбрасываем текущие данные перед генерацией новых
+    // --- Сброс текущих данных перед генерацией новых ---
     teams = []; // Очищаем массив команд
     schedule = []; // Очищаем массив расписания
     currentTourIndex = 0; // Сбрасываем индекс текущего тура
@@ -102,7 +100,6 @@ function generateRoundRobinSchedule() {
 
     // Заполняем массив teams новыми командами
     teams = inputText.split('\n').map(team => team.trim()).filter(team => team);
-    // --- ИСПРАВЛЕНИЕ КОНЕЦ ---
 
     if (teams.length < 2) {
         alert("Для турнира нужно минимум 2 команды.");
@@ -112,7 +109,7 @@ function generateRoundRobinSchedule() {
     // Сохраняем введенные команды в localStorage
     localStorage.setItem('tournamentTeams', JSON.stringify(teams));
 
-    // --- Дальнейшая логика генерации расписания остается прежней ---
+    // --- Дальнейшая логика генерации расписания ---
     totalTours = teams.length - 1; // Количество туров равно N-1 для N команд
     const numTeams = teams.length;
 
@@ -170,7 +167,6 @@ function generateRoundRobinSchedule() {
     updateUI();
     loadTour(currentTourIndex); // Загружаем первый тур с новыми данными
 }
-// --- КОНЕЦ ИСПРАВЛЕННОЙ ФУНКЦИИ ---
 
 // Обновление UI: кнопки навигации, номера туров, статус кнопки генерации
 function updateUI() {
@@ -181,8 +177,20 @@ function updateUI() {
     prevTourBtn.disabled = currentTourIndex === 0;
     nextTourBtn.disabled = currentTourIndex === totalTours - 1;
 
-    // Управление кнопкой генерации: активна, если есть команды, но нет расписания
-    generateBtn.disabled = teams.length === 0 || schedule.length > 0;
+    // --- ИСПРАВЛЕННАЯ ЛОГИКА ДЛЯ КНОПКИ ГЕНЕРАЦИИ ---
+    // Кнопка "Сгенерировать расписание" должна быть активна,
+    // только если введено хотя бы одно название команды.
+    // Если расписание уже сгенерировано, она должна быть неактивна,
+    // пока не будет выполнен сброс данных.
+    if (teams.length > 0 && schedule.length === 0) {
+        generateBtn.disabled = false; // Активна, если есть команды и нет расписания
+    } else if (teams.length === 0) {
+        generateBtn.disabled = true; // Неактивна, если нет команд
+    } else {
+        generateBtn.disabled = true; // Неактивна, если расписание уже есть (до сброса)
+    }
+    // --- КОНЕЦ ИСПРАВЛЕННОЙ ЛОГИКИ ---
+
 
     // Показываем/скрываем секцию турнирной таблицы
     if (teams.length > 0 && schedule.length > 0) {
@@ -515,7 +523,10 @@ function generateStandingsTable() {
 
         // Определение позиции для зон вылета/стыков
         const position = index + 1;
-        if (position >= 101 && position <= 120) {
+        // В зависимости от количества команд, эти зоны могут меняться.
+        // Для простоты, предположим, что есть 150 позиций в таблице.
+        // Эти числа могут потребовать корректировки в зависимости от реального количества команд.
+        if (position >= 101 && position <= 120) { // Примерные диапазоны для зон
             row.classList.add('playoff-zone'); // Добавляем класс для зоны стыков
         } else if (position >= 121 && position <= 150) {
             row.classList.add('relegation-zone'); // Добавляем класс для зоны вылета
@@ -669,7 +680,7 @@ function resetData() {
         tourStatsMessageSpan.textContent = '';
 
         // Сбрасываем кнопки и отключаем их, если нужно
-        generateBtn.disabled = true;
+        generateBtn.disabled = true; // Кнопка генерации неактивна до ввода команд
         prevTourBtn.disabled = true;
         nextTourBtn.disabled = true;
         tourJumpInput.value = '';
