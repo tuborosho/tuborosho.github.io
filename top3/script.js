@@ -85,6 +85,7 @@ function init() {
     }
 }
 
+// --- ИСПРАВЛЕННАЯ ФУНКЦИЯ ---
 // Генерация расписания Round Robin
 function generateRoundRobinSchedule() {
     const inputText = teamsInput.value.trim();
@@ -92,7 +93,17 @@ function generateRoundRobinSchedule() {
         alert("Пожалуйста, введите названия команд.");
         return;
     }
+    // --- ИСПРАВЛЕНИЕ НАЧАЛО ---
+    // Полностью сбрасываем текущие данные перед генерацией новых
+    teams = []; // Очищаем массив команд
+    schedule = []; // Очищаем массив расписания
+    currentTourIndex = 0; // Сбрасываем индекс текущего тура
+    totalTours = 0; // Сбрасываем общее количество туров
+
+    // Заполняем массив teams новыми командами
     teams = inputText.split('\n').map(team => team.trim()).filter(team => team);
+    // --- ИСПРАВЛЕНИЕ КОНЕЦ ---
+
     if (teams.length < 2) {
         alert("Для турнира нужно минимум 2 команды.");
         return;
@@ -101,12 +112,12 @@ function generateRoundRobinSchedule() {
     // Сохраняем введенные команды в localStorage
     localStorage.setItem('tournamentTeams', JSON.stringify(teams));
 
-    schedule = []; // Очищаем предыдущее расписание
+    // --- Дальнейшая логика генерации расписания остается прежней ---
     totalTours = teams.length - 1; // Количество туров равно N-1 для N команд
     const numTeams = teams.length;
 
     // Если количество команд нечетное, добавляем "виртуальную" команду для баланса
-    const tempTeams = [...teams];
+    const tempTeams = [...teams]; // Создаем копию для алгоритма
     if (numTeams % 2 !== 0) {
         tempTeams.push("BYE"); // "BYE" означает, что команда пропускает тур
     }
@@ -120,18 +131,11 @@ function generateRoundRobinSchedule() {
     // Основной цикл генерации туров
     for (let tour = 0; tour < totalTours; tour++) {
         const currentTourMatches = [];
-        const round = []; // Для внутренней логики алгоритма
-
-        // Алгоритм Round Robin: фиксируем первую команду, остальные циклически сдвигаются
-        // В каждом туре первая команда (индекс 0) остается на месте,
-        // остальные команды (индексы 1..N-1) циклически сдвигаются.
-        // Для нечетного числа команд "BYE" команда также участвует в сдвиге.
         const firstTeamIndex = teamIndices[0]; // Индекс первой команды (фиксируется)
         const rotatingTeamIndices = teamIndices.slice(1); // Остальные команды
 
         // Сдвиг команд: последние 'half - 1' команды перемещаются в начало,
         // а первые 'half - 1' команды перемещаются в конец.
-        // Это гарантирует, что каждая команда сыграет с каждой другой командой.
         const rotatedIndices = [
             firstTeamIndex, // Фиксированная команда
             ...rotatingTeamIndices.slice(-half + 1), // Команды, перешедшие из конца
@@ -162,10 +166,11 @@ function generateRoundRobinSchedule() {
     // Сохраняем сгенерированное расписание в localStorage
     localStorage.setItem('tournamentSchedule', JSON.stringify(schedule));
 
-    currentTourIndex = 0; // Сбрасываем на первый тур после генерации
-    updateUI(); // Обновляем интерфейс (кнопки, номера туров)
-    loadTour(currentTourIndex); // Загружаем матчи первого тура
+    // Теперь UI будет обновлен на основе новых данных
+    updateUI();
+    loadTour(currentTourIndex); // Загружаем первый тур с новыми данными
 }
+// --- КОНЕЦ ИСПРАВЛЕННОЙ ФУНКЦИИ ---
 
 // Обновление UI: кнопки навигации, номера туров, статус кнопки генерации
 function updateUI() {
@@ -627,7 +632,6 @@ function showFullSchedule() {
                     matchFullDiv.appendChild(spotifyRightPlaceholder);
                 }
 
-
                 matchFullDiv.appendChild(team1Name);
                 matchFullDiv.appendChild(scoreSpan);
                 matchFullDiv.appendChild(team2Name);
@@ -638,7 +642,6 @@ function showFullSchedule() {
         });
         fullScheduleContent.appendChild(groupDiv);
     });
-
 
     fullScheduleModal.style.display = 'block'; // Показываем модальное окно
 }
