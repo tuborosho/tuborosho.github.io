@@ -452,7 +452,7 @@ async function renderStandingsFromDB() {
     // Сначала нужно рассчитать статистику, основываясь на сохраненных матчах
     const standings = {};
     allTeams.forEach(team => {
-        standings[team.teamName] = { wins: 0, losses: 0, draws: 0, points: 0, goalsFor: 0, goalsAgainst: 0, goalDifference: 0 };
+        standings[team.teamName] = { wins: 0, draws: 0, losses: 0, points: 0, goalsFor: 0, goalsAgainst: 0, goalDifference: 0 };
     });
 
     // Получаем все матчи из schedule
@@ -1265,4 +1265,5 @@ window.addEventListener('click', (event) => {
 // обработка ввода счета и Spotify URL, а также базовая статистика тура
 
 // реализованы и объединены.
+
 
