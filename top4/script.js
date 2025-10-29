@@ -513,6 +513,7 @@ async function renderStandingsFromDB() {
             row.innerHTML = `
                 <td>${index + 1}</td>
                 <td>${teamName}</td>
+                <td>${stats.wins + stats.losses + stats.draws}</td>
                 <td>${stats.wins}</td>
                 <td>${stats.losses}</td>
                 <td>${stats.draws}</td>
@@ -1264,3 +1265,4 @@ window.addEventListener('click', (event) => {
 // обработка ввода счета и Spotify URL, а также базовая статистика тура
 
 // реализованы и объединены.
+
