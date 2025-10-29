@@ -420,4 +420,130 @@ button:disabled {
     .schedule-section td:last-child { /* Ячейка действий */
         width: auto;
     }
+
+}
+
+/* Базовые стили для контейнера и колонок */
+.container {
+    display: flex; /* Включаем Flexbox для расположения колонок */
+    gap: 20px; /* Пространство между колонками */
+    margin-bottom: 20px; /* Отступ снизу от элементов формы */
+    width: 100%; /* Занимает всю доступную ширину */
+    box-sizing: border-box;
+}
+
+.column {
+    flex: 1; /* Каждая колонка занимает равное пространство */
+    display: flex;
+    flex-direction: column; /* Элементы внутри колонки располагаются вертикально */
+}
+
+.column h2 {
+    margin-bottom: 10px; /* Отступ под заголовком */
+    font-size: 1.2em; /* Размер заголовка */
+    color: #333; /* Цвет заголовка */
+}
+
+/* Стили для textarea и контейнера кнопок */
+textarea,
+#spotifyButtonsContainer {
+    width: 100%; /* Занимает всю ширину колонки */
+    min-height: 150px; /* Минимальная высота для полей ввода */
+    padding: 10px;
+    border: 1px solid #ccc; /* Граница поля */
+    border-radius: 5px; /* Скругленные углы */
+    box-sizing: border-box; /* padding и border включены в общую ширину/высоту */
+    margin-bottom: 10px; /* Отступ снизу */
+    font-size: 1em; /* Размер шрифта */
+    resize: vertical; /* Позволяет менять высоту textarea */
+}
+
+/* Стили для контейнера кнопок, чтобы они выстраивались в ряд */
+#spotifyButtonsContainer {
+    display: flex; /* Включаем Flexbox */
+    flex-wrap: wrap; /* Перенос кнопок на новую строку, если не влезают */
+    align-items: center; /* Выравнивание элементов по вертикали */
+    gap: 5px; /* Пространство между кнопками */
+    padding: 0; /* Убираем padding, если он был задан ранее */
+    border: none; /* Убираем границу, если она мешает */
+}
+
+/* Стили для самой зеленой кнопки Spotify */
+.spotify-button {
+    background-color: #1DB954; /* Фирменный зеленый цвет Spotify */
+    color: white; /* Белый текст */
+    border: none; /* Без границы */
+    border-radius: 50%; /* Делаем кнопку круглой */
+    width: 40px; /* Фиксированная ширина */
+    height: 40px; /* Фиксированная высота */
+    font-size: 20px; /* Размер шрифта для буквы 'S' */
+    font-weight: bold; /* Жирный шрифт */
+    cursor: pointer; /* Указатель мыши в виде руки */
+    display: flex;
+    justify-content: center; /* Центрирование буквы по горизонтали */
+    align-items: center; /* Центрирование буквы по вертикали */
+    text-decoration: none; /* Убираем подчеркивание, если кнопка будет ссылкой */
+    transition: background-color 0.2s ease; /* Плавный переход цвета при наведении */
+}
+
+/* Эффект при наведении на кнопку */
+.spotify-button:hover {
+    background-color: #1ED760; /* Чуть светлее зеленый при наведении */
+}
+
+/* Стили для общих кнопок (Сохранить, Сбросить) */
+button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.2s ease;
+    margin-right: 10px; /* Отступ между кнопками */
+}
+
+#saveButton {
+    background-color: #1DB954; /* Зеленый */
+    color: white;
+}
+
+#saveButton:hover {
+    background-color: #1ED760;
+}
+
+#resetButton {
+    background-color: #f0f0f0; /* Светло-серый */
+    color: #333;
+}
+
+#resetButton:hover {
+    background-color: #e0e0e0;
+}
+
+/* --- Стили для управления видимостью --- */
+
+/* Скрываем textarea ссылок, когда кнопки Spotify видимы */
+textarea#urlsInput[style*="display: none"],
+#spotifyButtonsContainer[style*="display: none"] {
+    display: none !important; /* Важно использовать !important, чтобы переопределить inline стили */
+}
+
+/* Показываем textarea ссылок, когда она активна для редактирования */
+textarea#urlsInput[style*="display: block"],
+#spotifyButtonsContainer[style*="display: block"] {
+    display: block !important;
+}
+
+/* Убедимся, что поле команд всегда видно, если не задано иное */
+textarea#teamsInput[style*="display: none"] {
+    display: none !important;
+}
+textarea#teamsInput[style*="display: block"],
+textarea#teamsInput:not([style]) { /* Показываем, если явно block, или если style не задан */
+    display: block !important;
+}
+
+/* Если нужно, чтобы турнирная таблица располагалась под кнопками, а не вместо textarea */
+#tournamentTable {
+    margin-top: 20px; /* Отступ сверху, если таблица идет после формы */
 }
