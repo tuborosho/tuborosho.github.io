@@ -10,22 +10,12 @@
     <div class="container">
         <h1>Генератор Турниров Round Robin</h1>
 
-        <!-- Секция ввода команд и ссылок, разделенная на колонки -->
-        <div class="input-section-container"> <!-- Новый контейнер для колонок -->
-            <div class="column">
-                <h2>КОМАНДЫ</h2>
-                <textarea id="teamsInput" rows="10" placeholder="Введите названия команд, по одной на строку..."></textarea>
-            </div>
-            <div class="column">
-                <h2>ССЫЛКИ</h2>
-                <textarea id="urlsInput" placeholder="Введите Spotify URL для каждой команды, по одному на строку..."></textarea>
-                <div id="spotifyButtonsContainer">
-                    <!-- Сюда будут динамически добавляться зеленые кнопки 'S' -->
-                </div>
-            </div>
-        </div>
-
-        <div class="button-group"> <!-- Группировка кнопок -->
+        <div class="input-section">
+            <label for="teamsInput">Введите названия команд (каждая с новой строки):</label>
+            <textarea id="teamsInput" rows="10" placeholder="Команда А
+Команда Б
+Команда В
+Команда Г"></textarea>
             <button id="generateBtn">Сгенерировать Расписание</button>
             <button id="resetBtn" class="reset-button">Сбросить все данные</button>
         </div>
