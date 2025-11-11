@@ -11,11 +11,22 @@
         <h1>Генератор Турниров Round Robin</h1>
 
         <div class="input-section">
-            <label for="teamsInput">Введите названия команд (каждая с новой строки):</label>
-            <textarea id="teamsInput" rows="10" placeholder="Команда А
+            <div class="teams-and-urls">
+                <div class="input-group">
+                    <label for="teamsInput">КОМАНДЫ:</label>
+                    <textarea id="teamsInput" rows="10" placeholder="Команда А
 Команда Б
 Команда В
 Команда Г"></textarea>
+                </div>
+                <div class="input-group">
+                    <label for="urlsInput">ССЫЛКИ:</label>
+                    <textarea id="urlsInput" rows="10" placeholder="https://open.spotify.com/track/1
+https://open.spotify.com/track/2
+https://open.spotify.com/track/3
+https://open.spotify.com/track/4"></textarea>
+                </div>
+            </div>
             <button id="generateBtn">Сгенерировать Расписание</button>
             <button id="resetBtn" class="reset-button">Сбросить все данные</button>
         </div>
