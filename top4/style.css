@@ -137,8 +137,6 @@ button:disabled {
     background-color: #272727; /* Чередование строк */
 }
 
-/* Удалены стили для зон и сортировки, так как они не были реализованы */
-
 /* Стили для навигации по турам */
 .schedule-control {
     text-align: center;
@@ -174,6 +172,9 @@ button:disabled {
     background-color: #3a3a3a;
     color: #e0e0e0;
     margin-left: 10px;
+    /* Условие для предотвращения зума на мобильных устройствах */
+    font-size: 16px; /* Или больше, чтобы iOS не зумировал */
+    -webkit-text-size-adjust: none;
 }
 
 /* Стиль для сообщений статистики */
@@ -215,6 +216,9 @@ button:disabled {
     background-color: #3a3a3a;
     color: #e0e0e0;
     margin: 0 5px;
+    /* Условие для предотвращения зума на мобильных устройствах */
+    font-size: 16px; /* Или больше, чтобы iOS не зумировал */
+    -webkit-text-size-adjust: none;
 }
 
 /* Стили для ячеек матчей */
@@ -389,6 +393,10 @@ button:disabled {
         width: 50px;
         font-size: 0.9rem;
     }
+    /* Переопределяем font-size для input[type="number"] на мобильных, чтобы не зумилось */
+    .schedule-section input[type="number"] {
+        font-size: 16px; /* Для предотвращения зума на iOS */
+    }
     .match-teams .team-name {
         max-width: 120px; /* Ограничиваем ширину имени команды */
     }
@@ -431,8 +439,6 @@ button:disabled {
     background-color: rgba(255, 0, 0, 0.2) !important; /* Полупрозрачный красный */
 }
 
-/* В вашем style.css */
-
 .teams-and-urls {
     display: flex; /* Используем Flexbox для расположения рядом */
     gap: 15px; /* Расстояние между двумя textarea */
@@ -455,15 +461,4 @@ button:disabled {
     width: 100%; /* Занимает всю ширину родителя */
     box-sizing: border-box; /* Учитывает padding и border в общей ширине/высоте */
     resize: vertical; /* Разрешаем менять размер только по вертикали, если хотите */
-}
-/* Убедитесь, что это относится к вашим полям ввода счета */
-.score-input {
-    font-size: 16px; /* Или больше, например 20px */
-    /* Убедитесь, что другие стили не перекрывают это */
-    -webkit-text-size-adjust: 100%; /* Для iOS, но может помочь и на Android */
-}
-
-/* Дополнительно, для всей страницы, чтобы предотвратить зум при фокусировке на других элементах, если это нужно */
-body {
-    -webkit-text-size-adjust: 100% !important; /* Важно для отмены зума */
 }
