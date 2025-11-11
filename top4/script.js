@@ -703,17 +703,21 @@ async function displayTour(tourIndex) {
         team1Cell.appendChild(spotify1Textarea);
 
         // Счет Команды 1
-        const score1Cell = row.insertCell(2);
-        const score1Input = document.createElement('input');
-        score1Input.type = 'number';
-        score1Input.min = '0';
-        score1Input.value = match.score1 !== null ? match.score1 : '';
-        score1Input.disabled = match.isBye; // Отключаем, если матч BYE
-        score1Input.dataset.team = 'team1';
-        score1Input.dataset.matchId = match.id;
-        score1Input.classList.add('score-input'); // <-- ДОБАВЛЕНО
-        score1Input.addEventListener('change', handleScoreInputChange);
-        score1Cell.appendChild(score1Input);
+const score1Cell = row.insertCell(2);
+const score1Input = document.createElement('input');
+score1Input.type = 'text';
+score1Input.inputmode = 'numeric';
+score1Input.pattern = '[0-9]*';
+score1Input.min = '0';
+score1Input.value = match.score1 !== null ? match.score1 : '';
+score1Input.disabled = match.isBye;
+score1Input.dataset.team = 'team1';
+score1Input.dataset.matchId = match.id;
+score1Input.classList.add('score-input');
+score1Input.autocomplete = 'off';
+score1Input.maxLength = '3';
+score1Input.addEventListener('change', handleScoreInputChange);
+score1Cell.appendChild(score1Input);
 
         // Команда 2 и Spotify URL
         const team2Cell = row.insertCell(3);
@@ -734,28 +738,33 @@ async function displayTour(tourIndex) {
         team2Cell.appendChild(spotify2Textarea);
 
         // Счет Команды 2
-        const score2Cell = row.insertCell(4);
-        const score2Input = document.createElement('input');
-        score2Input.type = 'number';
-        score2Input.min = '0';
-        score2Input.value = match.score2 !== null ? match.score2 : '';
-        score2Input.disabled = match.isBye;
-        score2Input.dataset.team = 'team2';
-        score2Input.dataset.matchId = match.id;
-        score2Input.classList.add('score-input'); // <-- ДОБАВЛЕНО
-        score2Input.addEventListener('change', handleScoreInputChange);
-        score2Cell.appendChild(score2Input);
+const score2Cell = row.insertCell(4);
+const score2Input = document.createElement('input');
+score2Input.type = 'text';
+score2Input.inputmode = 'numeric';
+score2Input.pattern = '[0-9]*';
+score2Input.min = '0';
+score2Input.value = match.score2 !== null ? match.score2 : '';
+score2Input.disabled = match.isBye;
+score2Input.dataset.team = 'team2';
+score2Input.dataset.matchId = match.id;
+score2Input.classList.add('score-input');
+score2Input.autocomplete = 'off';
+score2Input.maxLength = '3';
+score2Input.addEventListener('change', handleScoreInputChange);
+score2Cell.appendChild(score2Input);
+
 
         // Кнопка "Сохранить"/"Изменить"
-        const actionsCell = row.insertCell(5);
-        const actionBtn = document.createElement('button');
-        actionBtn.textContent = (match.score1 !== null && match.score2 !== null) ? 'Изменить' : 'Сохранить';
-        actionBtn.dataset.matchId = match.id;
-        actionBtn.disabled = match.isBye; // Отключаем кнопку для BYE матчей
-        actionBtn.addEventListener('click', handleSaveOrUpdateScore);
-        actionsCell.appendChild(actionBtn);
-    });
-    currentTourOutput.appendChild(table);
+const actionsCell = row.insertCell(5);
+const actionBtn = document.createElement('button');
+actionBtn.textContent = (match.score1 !== null && match.score2 !== null) ? 'Изменить' : 'Сохранить';
+actionBtn.dataset.matchId = match.id;
+actionBtn.disabled = match.isBye;
+actionBtn.addEventListener('click', handleSaveOrUpdateScore);
+actionsCell.appendChild(actionBtn);
+});
+currentTourOutput.appendChild(table);
 }
 
 /**
@@ -1267,6 +1276,7 @@ window.addEventListener('click', (event) => {
 // обработка ввода счета и Spotify URL, а также базовая статистика тура
 
 // реализованы и объединены.
+
 
 
 
