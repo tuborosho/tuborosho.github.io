@@ -172,9 +172,13 @@ button:disabled {
     background-color: #3a3a3a;
     color: #e0e0e0;
     margin-left: 10px;
-    /* Условие для предотвращения зума на мобильных устройствах */
-    font-size: 16px; /* Или больше, чтобы iOS не зумировал */
-    -webkit-text-size-adjust: none;
+    /* УСИЛЕННЫЕ ПРАВИЛА ДЛЯ ПРЕДОТВРАЩЕНИЯ ЗУМА */
+    font-size: 16px !important; /* Очень важно для iOS */
+    -webkit-text-size-adjust: 100% !important; /* Для Safari на iOS */
+    -webkit-appearance: none !important; /* Сброс стандартных стилей iOS */
+    -moz-appearance: none !important; /* Для Firefox */
+    appearance: none !important; /* Стандарт */
+    touch-action: manipulation; /* Может помочь на некоторых устройствах */
 }
 
 /* Стиль для сообщений статистики */
@@ -216,9 +220,13 @@ button:disabled {
     background-color: #3a3a3a;
     color: #e0e0e0;
     margin: 0 5px;
-    /* Условие для предотвращения зума на мобильных устройствах */
-    font-size: 16px; /* Или больше, чтобы iOS не зумировал */
-    -webkit-text-size-adjust: none;
+    /* УСИЛЕННЫЕ ПРАВИЛА ДЛЯ ПРЕДОТВРАЩЕНИЯ ЗУМА */
+    font-size: 16px !important; /* Очень важно для iOS */
+    -webkit-text-size-adjust: 100% !important; /* Для Safari на iOS */
+    -webkit-appearance: none !important; /* Сброс стандартных стилей iOS */
+    -moz-appearance: none !important; /* Для Firefox */
+    appearance: none !important; /* Стандарт */
+    touch-action: manipulation; /* Может помочь на некоторых устройствах */
 }
 
 /* Стили для ячеек матчей */
@@ -393,9 +401,14 @@ button:disabled {
         width: 50px;
         font-size: 0.9rem;
     }
-    /* Переопределяем font-size для input[type="number"] на мобильных, чтобы не зумилось */
-    .schedule-section input[type="number"] {
-        font-size: 16px; /* Для предотвращения зума на iOS */
+    /* УСИЛЕННЫЕ ПРАВИЛА ДЛЯ ПРЕДОТВРАЩЕНИЯ ЗУМА на мобильных */
+    .schedule-section input[type="number"], #tourJumpInput {
+        font-size: 16px !important; /* Убедимся, что размер шрифта не ниже 16px */
+        -webkit-text-size-adjust: 100% !important; /* Для Safari на iOS */
+        -webkit-appearance: none !important; /* Сброс стандартных стилей iOS */
+        -moz-appearance: none !important;
+        appearance: none !important;
+        touch-action: manipulation; /* Может помочь на некоторых устройствах */
     }
     .match-teams .team-name {
         max-width: 120px; /* Ограничиваем ширину имени команды */
