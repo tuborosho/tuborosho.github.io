@@ -422,3 +422,11 @@ button:disabled {
     }
 
 }
+
+/* Выделение зон */
+.relegation-playoff {
+    background-color: rgba(255, 255, 0, 0.2) !important; /* Полупрозрачный желтый */
+}
+.relegation {
+    background-color: rgba(255, 0, 0, 0.2) !important; /* Полупрозрачный красный */
+}
