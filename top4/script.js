@@ -711,6 +711,7 @@ async function displayTour(tourIndex) {
         score1Input.disabled = match.isBye; // Отключаем, если матч BYE
         score1Input.dataset.team = 'team1';
         score1Input.dataset.matchId = match.id;
+        score1Input.classList.add('score-input'); // <-- ДОБАВЛЕНО
         score1Input.addEventListener('change', handleScoreInputChange);
         score1Cell.appendChild(score1Input);
 
@@ -741,6 +742,7 @@ async function displayTour(tourIndex) {
         score2Input.disabled = match.isBye;
         score2Input.dataset.team = 'team2';
         score2Input.dataset.matchId = match.id;
+        score2Input.classList.add('score-input'); // <-- ДОБАВЛЕНО
         score2Input.addEventListener('change', handleScoreInputChange);
         score2Cell.appendChild(score2Input);
 
@@ -1265,6 +1267,7 @@ window.addEventListener('click', (event) => {
 // обработка ввода счета и Spotify URL, а также базовая статистика тура
 
 // реализованы и объединены.
+
 
 
 
