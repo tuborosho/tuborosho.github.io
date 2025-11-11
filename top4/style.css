@@ -430,3 +430,29 @@ button:disabled {
 .relegation {
     background-color: rgba(255, 0, 0, 0.2) !important; /* Полупрозрачный красный */
 }
+
+/* В вашем style.css */
+
+.teams-and-urls {
+    display: flex; /* Используем Flexbox для расположения рядом */
+    gap: 15px; /* Расстояние между двумя textarea */
+    margin-bottom: 15px; /* Отступ снизу */
+}
+
+.teams-and-urls .input-group {
+    flex: 1; /* Каждый input-group будет занимать равную долю */
+    display: flex;
+    flex-direction: column; /* Чтобы label был над textarea */
+}
+
+.teams-and-urls .input-group label {
+    margin-bottom: 5px; /* Отступ между label и textarea */
+    font-weight: bold;
+}
+
+.teams-and-urls .input-group textarea {
+    flex-grow: 1; /* Чтобы textarea растягивались по высоте внутри input-group, если нужно */
+    width: 100%; /* Занимает всю ширину родителя */
+    box-sizing: border-box; /* Учитывает padding и border в общей ширине/высоте */
+    resize: vertical; /* Разрешаем менять размер только по вертикали, если хотите */
+}
