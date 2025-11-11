@@ -1268,3 +1268,26 @@ window.addEventListener('click', (event) => {
 
 
 
+// Применение стилей для зон вылета/стыков (1-based index)
+            const rowIndex = index + 1;
+            if (rowIndex >= 121 && rowIndex <= 150) { // Зона вылета (121-150)
+                row.classList.add('relegation');
+            } else if (rowIndex >= 101 && rowIndex <= 120) { // Зона стыков (101-120)
+                row.classList.add('relegation-playoff');
+            }
+        });
+    }
+
+// Обновляем номера строк и зоны вылета/стыков после сортировки
+        rows.forEach((row, index) => {
+            row.cells[0].textContent = index + 1; // Обновляем #
+            const rowIndex = index + 1;
+             row.classList.remove('relegation', 'relegation-playoff'); // Снимаем старые классы
+            if (rowIndex >= 121 && rowIndex <= 150) {
+                row.classList.add('relegation');
+            } else if (rowIndex >= 101 && rowIndex <= 120) {
+                row.classList.add('relegation-playoff');
+            }
+        });
+    }
+
