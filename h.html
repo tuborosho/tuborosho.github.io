@@ -2,9 +2,21 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>PDF</title>
+    <title>PDF на полный экран</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+        embed {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+    </style>
 </head>
 <body>
-    <embed src="z.pdf" type="application/pdf" width="100%" height="100%">
+    <embed src="z.pdf" type="application/pdf">
 </body>
 </html>
