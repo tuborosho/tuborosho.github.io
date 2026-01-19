@@ -2,14 +2,22 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>PDF на полный экран</title>
+    <title>Изменяемый PDF</title>
     <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            height: 100%;
+        body {
+            margin: 20px;
+            font-family: sans-serif;
         }
-        embed {
+
+        .pdf-container {
+            width: 600px;          /* начальная ширина */
+            height: 800px;         /* начальная высота */
+            border: 2px solid #000;
+            resize: both;          /* позволяет изменять размер блока вручную */
+            overflow: auto;        /* добавляет прокрутку если PDF больше контейнера */
+        }
+
+        .pdf-container embed {
             width: 100%;
             height: 100%;
             display: block;
@@ -17,6 +25,9 @@
     </style>
 </head>
 <body>
-    <embed src="z.pdf" type="application/pdf">
+    <h2>PDF можно менять размер прямо на странице</h2>
+    <div class="pdf-container">
+        <embed src="z.pdf" type="application/pdf">
+    </div>
 </body>
 </html>
